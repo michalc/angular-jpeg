@@ -1,0 +1,16 @@
+{
+  "name": "angular-jpeg",
+  "version": "0.0.1",
+  "description": "AngularJS service to read JPEG files locally using pure Javascript",
+  "main": "src/angular-jpeg.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michalc/angular-jpeg.git"
+  },
+  "author": "Michal Charemza",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/michalc/angular-jpeg/issues"
+  },
+  "homepage": "https://github.com/michalc/angular-jpeg"
+}
