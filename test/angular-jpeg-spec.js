@@ -1,4 +1,4 @@
-/*global module */
+/*global describe, module, beforeEach, it, expect */
 
 describe('AngularJpeg', function () {
   'use strict';

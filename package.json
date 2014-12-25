@@ -25,6 +25,6 @@
     "karma-phantomjs-launcher": "^0.1.4"
   },
   "scripts": {
-    "test": "./node_modules/.bin/karma start --single-run --browsers PhantomJS,Firefox"
+    "test": "./node_modules/.bin/jshint --extract=auto ./src ./test ./demo && ./node_modules/.bin/karma start --single-run --browsers PhantomJS,Firefox"
   }
 }
