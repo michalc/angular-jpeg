@@ -15,8 +15,11 @@
   <script src="../bower_components/angular/angular.js"></script>
   <script src="../src/angular-jpeg.js"></script>
   <script>
+  	/*global angular */
   	(function() {
-  		app = angular.module('angular-jpeg-demo', ['angular-jpeg']);
+  		'use strict';
+
+  		var app = angular.module('angular-jpeg-demo', ['angular-jpeg']);
 
   		app.controller('DemoController', function($window, $scope, AngularJpeg) {
   			$scope.state = 'initial';
