@@ -12,5 +12,8 @@
   "bugs": {
     "url": "https://github.com/michalc/angular-jpeg/issues"
   },
-  "homepage": "https://github.com/michalc/angular-jpeg"
+  "homepage": "https://github.com/michalc/angular-jpeg",
+  "devDependencies": {
+    "jshint": "^2.5.11"
+  }
 }
