@@ -1,0 +1,6 @@
+{
+  "fileExtensions": [ ".js", ".html"],
+  "maximumLineLength": 120,
+  "validateLineBreaks": "LF",
+  "validateIndentation": 2
+}

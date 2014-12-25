@@ -6,6 +6,6 @@ describe('AngularJpeg', function () {
   beforeEach(module('angular-jpeg'));
 
   it('should expect one to be one', function() {
-     expect(1).toBe(1);
+    expect(1).toBe(1);
   });
 });
