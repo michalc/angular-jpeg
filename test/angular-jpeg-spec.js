@@ -5,16 +5,22 @@ describe('AngularJpeg', function () {
   var $rootScope, $q;
   var AngularJpeg, MARKERS, ERRORS, FIXTURES;
 
-  var readAsArrayBuffer, fileReader;
+  var readAsArrayBuffer, fileReader, uInt8Array;
   var FileReaderMock = function() {
     fileReader = this;
     this.readAsArrayBuffer = readAsArrayBuffer;
   };
   var FileMock = function() {};
+  var BufferMock = function() {};
+  var Uint8ArrayMock = function(buffer) {
+    uInt8Array = this;
+    this.buffer = buffer;
+  };
 
   beforeEach(module('angular-jpeg', function($provide) {
     $provide.value('$window', {
-      FileReader: FileReaderMock
+      FileReader: FileReaderMock,
+      Uint8Array: Uint8ArrayMock
     });
   }));
 
@@ -62,6 +68,16 @@ describe('AngularJpeg', function () {
       });
       $rootScope.$digest();
       expect(results).toBe(FIXTURES.withStartAndEndMarker);
+    });
+  });
+
+  describe('loadFromBuffer', function() {
+    it('should pass a new Uint8Array to loadFromUInt8Array', function() {
+      spyOn(AngularJpeg, 'loadFromUInt8Array');
+      var buffer = new BufferMock();
+      AngularJpeg.loadFromBuffer(buffer);
+      expect(AngularJpeg.loadFromUInt8Array).toHaveBeenCalledWith(uInt8Array);
+      expect(uInt8Array.buffer).toBe(buffer);
     });
   });
 
