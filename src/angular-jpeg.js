@@ -3,8 +3,8 @@
 angular.module('angular-jpeg', []);
 
 angular.module('angular-jpeg').constant('ANGULAR_JPEG_MARKERS', {
- startOfImage: 0xFFD8,
- endOfImage: 0xFFD9
+  startOfImage: 0xFFD8,
+  endOfImage: 0xFFD9
 });
 
 angular.module('angular-jpeg').constant('ANGULAR_JPEG_ERRORS', {
