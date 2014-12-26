@@ -1,6 +1,7 @@
 {
-  "fileExtensions": [ ".js", ".html"],
+  "fileExtensions": [ ".js"],
   "maximumLineLength": 120,
   "validateLineBreaks": "LF",
-  "validateIndentation": 2
+  "validateIndentation": 2,
+  "disallowTrailingWhitespace": true
 }

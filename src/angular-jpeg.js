@@ -12,6 +12,7 @@ angular.module('angular-jpeg').constant('ANGULAR_JPEG_ERRORS', {
   fileReadError: 'Unable to read file contents',
   unknown: 'Unknown',
   missingStartOfImageMarker: 'Missing start of image marker',
+  missingEndOfImageMarker: 'Missing end of image marker'
 });
 
 angular.module('angular-jpeg').service('AngularJpeg', function($q, $window, ANGULAR_JPEG_MARKERS, ANGULAR_JPEG_ERRORS) {
