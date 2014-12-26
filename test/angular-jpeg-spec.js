@@ -83,6 +83,14 @@ describe('AngularJpeg', function () {
       loadFromFileError = null;
     });
 
+    it('should reject if no file passed', function() {
+      AngularJpeg.loadFromFile(null).catch(function(_loadFromFileError_) {
+        loadFromFileError = _loadFromFileError_;
+      });
+      $rootScope.$digest();
+      expect(loadFromFileError).toBe(ERRORS.noFile);
+    });
+
 
     it('should pass the file to readAsArrayBuffer', function() {
       readAsArrayBuffer = jasmine.createSpy('readAsArrayBuffer');
