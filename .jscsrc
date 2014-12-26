@@ -5,5 +5,10 @@
   "disallowNewlineBeforeBlockStatements": true,
   "validateIndentation": 2,
   "disallowTrailingWhitespace": true,
-  "requireSpaceBeforeBlockStatements": true
+  "requireSpaceBeforeBlockStatements": true,
+  "requireCapitalizedConstructors": true,
+  "validateQuoteMarks": {
+    "mark": "'",
+    "escape": true
+  }
 }
