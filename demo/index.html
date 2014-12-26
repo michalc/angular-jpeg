@@ -20,7 +20,7 @@
   <h1>angular-jpeg demo</h1>
   <p class="droppable" drop-file>Drop a JPEG onto this element</p>
   <p ng-if="state == 'loading'">Loading...</p>
-  <p ng-if="state == 'error'">{{error}}</p>
+  <p ng-if="state == 'error'">Error: {{error || 'Unknown'}}</p>
   <pre ng-if="state == 'loaded'">{{view | json}}</pre>
   </form>
 </body>
