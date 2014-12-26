@@ -1,19 +1,31 @@
-/*global describe, module, beforeEach, it, expect, inject*/
+/*global describe, module, beforeEach, it, expect, inject, jasmine, spyOn*/
 
 describe('AngularJpeg', function () {
   'use strict';
-  var $rootScope;
+  var $rootScope, $q;
   var AngularJpeg, MARKERS, ERRORS, FIXTURES;
 
-  beforeEach(module('angular-jpeg'));
+  var readAsArrayBuffer, fileReader;
+  var FileReaderMock = function() {
+    fileReader = this;
+    this.readAsArrayBuffer = readAsArrayBuffer;
+  };
+  var FileMock = function() {};
+
+  beforeEach(module('angular-jpeg', function($provide) {
+    $provide.value('$window', {
+      FileReader: FileReaderMock
+    });
+  }));
 
   function toUInt8(value) {
     /*jshint bitwise: false*/
     return [value >> 8, value << 8 >> 8];
   }
 
-  beforeEach(inject(function(_$rootScope_, _AngularJpeg_, _ANGULAR_JPEG_MARKERS_, _ANGULAR_JPEG_ERRORS_) {
+  beforeEach(inject(function(_$rootScope_, _$q_, _AngularJpeg_, _ANGULAR_JPEG_MARKERS_, _ANGULAR_JPEG_ERRORS_) {
     $rootScope = _$rootScope_;
+    $q = _$q_;
     AngularJpeg = _AngularJpeg_;
     MARKERS = _ANGULAR_JPEG_MARKERS_;
     ERRORS = _ANGULAR_JPEG_ERRORS_;
@@ -50,6 +62,84 @@ describe('AngularJpeg', function () {
       });
       $rootScope.$digest();
       expect(results).toBe(FIXTURES.withStartAndEndMarker);
+    });
+  });
+
+  describe('loadFromFile', function() {
+    var loadFromBufferDeferred;
+    var readAsArrayBufferResults;
+    var loadFromBufferResults;
+    var loadFromBufferError;
+    var loadFromFileResults;
+    var loadFromFileError;
+
+    beforeEach(function() {
+      loadFromBufferDeferred = $q.defer();
+      spyOn(AngularJpeg, 'loadFromBuffer').and.returnValue(loadFromBufferDeferred.promise);
+      readAsArrayBufferResults = {};
+      loadFromBufferResults = {};
+      loadFromBufferError = {};
+      loadFromFileResults = null;
+      loadFromFileError = null;
+    });
+
+
+    it('should pass the file to readAsArrayBuffer', function() {
+      readAsArrayBuffer = jasmine.createSpy('readAsArrayBuffer');
+      var file = new FileMock();
+      AngularJpeg.loadFromFile(file);
+      expect(readAsArrayBuffer).toHaveBeenCalledWith(file);
+    });
+
+    describe('on file read error', function() {
+      it('should reject the promise on readFromBuffer error', function() {
+        var error;
+        readAsArrayBuffer = function() {
+          fileReader.onerror();
+        };
+        AngularJpeg.loadFromFile(new FileMock()).catch(function(_error_) {
+          error = _error_;
+        });
+        $rootScope.$digest();
+        expect(error).toBe(ERRORS.fileReadError);
+      });
+    });
+
+    describe('on file read success', function() {
+      beforeEach(function() {
+        readAsArrayBuffer = function() {
+          fileReader.onload({
+            target: {
+              result: readAsArrayBufferResults
+            }
+          });
+        };
+        AngularJpeg.loadFromFile(new FileMock()).then(function(_loadFromFileResults_) {
+          loadFromFileResults = _loadFromFileResults_;
+        }, function(_loadFromFileError_) {
+          loadFromFileError = _loadFromFileError_;
+        });
+      });
+
+      it('should pass the results of readAsArrayBuffer to loadFromBuffer', function() {
+        expect(AngularJpeg.loadFromBuffer).toHaveBeenCalledWith(readAsArrayBufferResults);
+      });
+
+      describe('and on validation error', function() {
+        it('should reject with the error from loadFromBuffer', function() {
+          loadFromBufferDeferred.reject(loadFromBufferError);
+          $rootScope.$digest();
+          expect(loadFromFileError).toBe(loadFromBufferError);
+        });
+      });
+
+      describe('and on loadFromBufferSuccess', function() {
+        it('should resolve with the results from loadFromBuffer', function() {
+          loadFromBufferDeferred.resolve(loadFromBufferResults);
+          $rootScope.$digest();
+          expect(loadFromFileResults).toBe(loadFromBufferResults);
+        });
+      });
     });
   });
 });

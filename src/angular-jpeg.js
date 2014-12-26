@@ -1,4 +1,4 @@
-/*global angular */
+/*global angular*/
 
 angular.module('angular-jpeg', []);
 
@@ -20,6 +20,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window, ANGU
 
   var ERRORS = ANGULAR_JPEG_ERRORS;
   var MARKERS = ANGULAR_JPEG_MARKERS;
+  var self = this;
 
   function readUInt16(uInt8Array, offset) {
     /*jshint bitwise: false*/
@@ -38,15 +39,15 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window, ANGU
     return $q.when(uInt8Array);
   }
 
-  function loadFromUInt8Array(uInt8Array) {
+  self.loadFromUInt8Array = function loadFromUInt8Array(uInt8Array) {
     return validate(uInt8Array);
-  }
+  };
 
-  function loadFromBuffer(buffer) {
-    return loadFromUInt8Array(new $window.Uint8Array(buffer));
-  }
+  self.loadFromBuffer = function loadFromBuffer(buffer) {
+    return self.loadFromUInt8Array(new $window.Uint8Array(buffer));
+  };
 
-  function loadFromFile(file) {
+  self.loadFromFile = function loadFromFile(file) {
     if (!file) {
       return $q.reject(ERRORS.noFile);
     }
@@ -58,8 +59,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window, ANGU
 
     reader.onload = function(e) {
       var buffer = e.target.result;
-
-      loadFromBuffer(buffer).then(function(uInt8Array) {
+      self.loadFromBuffer(buffer).then(function(uInt8Array) {
         deferred.resolve(uInt8Array);
       }, function(error) {
         deferred.reject(error);
@@ -73,11 +73,5 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window, ANGU
     reader.readAsArrayBuffer(file);
 
     return deferred.promise;
-  }
-
-  return {
-    loadFromFile: loadFromFile,
-    loadFromBuffer: loadFromBuffer,
-    loadFromUInt8Array: loadFromUInt8Array
   };
 });
