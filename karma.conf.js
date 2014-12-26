@@ -32,7 +32,7 @@ module.exports = function(config) {
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
 
-    reporters: ['dots', 'coverage', 'coveralls'],
+    reporters: ['dots', 'coverage'],
 
     preprocessors: {
       'src/*.js': ['coverage']
