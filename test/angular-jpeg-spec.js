@@ -117,15 +117,14 @@ describe('AngularJpeg', function () {
 
     describe('on file read error', function() {
       it('should reject the promise on readFromBuffer error', function() {
-        var error;
         readAsArrayBuffer = function() {
           fileReader.onerror();
         };
-        AngularJpeg.loadFromFile(new FileMock()).catch(function(_error_) {
-          error = _error_;
+        AngularJpeg.loadFromFile(new FileMock()).catch(function(_loadFromFileError_) {
+          loadFromFileError = _loadFromFileError_;
         });
         $rootScope.$digest();
-        expect(error).toBe(ERRORS.fileReadError);
+        expect(loadFromFileError).toBe(ERRORS.fileReadError);
       });
     });
 
