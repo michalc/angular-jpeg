@@ -36,6 +36,7 @@ describe('AngularJpeg', function () {
     PREFIX = _ANGULAR_JPEG_SEGMENT_PREFIX_;
 
     FIXTURES = {
+      withoutSegments: [PREFIX, PREFIX],
       withoutStartMarker: [PREFIX, TYPES.endOfImage.marker],
       withoutEndMarker: [PREFIX, TYPES.startOfImage.marker],
       withStartAndEndMarker: [PREFIX, TYPES.startOfImage.marker, PREFIX, TYPES.endOfImage.marker]
@@ -59,6 +60,15 @@ describe('AngularJpeg', function () {
       });
       $rootScope.$digest();
       expect(error).toBe(ERRORS.missingEndOfImageMarker);
+    });
+
+    it('reject data without any segments', function() {
+      var error;
+      AngularJpeg.loadFromUInt8Array(FIXTURES.withoutSegments).catch(function(_error_) {
+        error = _error_;
+      });
+      $rootScope.$digest();
+      expect(error).toBe(ERRORS.noSegments);
     });
 
     it('should load data with start and end markers', function() {
