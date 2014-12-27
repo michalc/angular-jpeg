@@ -44,6 +44,11 @@ describe('AngularJpeg', function () {
         PREFIX, TYPES.startOfImage.marker,
         PREFIX, TYPES.comment.marker, 0x0, 0x3, 0x0,
         PREFIX, TYPES.endOfImage.marker
+      ],
+      withScanData: [
+        PREFIX, TYPES.startOfImage.marker,
+        PREFIX, TYPES.startOfScan.marker, 0x0, 0x2, 0x0,
+        PREFIX, TYPES.endOfImage.marker
       ]
     };
   }));
@@ -116,6 +121,33 @@ describe('AngularJpeg', function () {
         segmentSize: 1,
         dataOffset: 7,
         dataSize: 0
+      }, {
+        type: TYPES.endOfImage,
+        segmentOffset: 9,
+        segmentSize: 0,
+        dataOffset: 9,
+        dataSize: 0
+      }]);
+    });
+
+    it('should load data with scan data', function() {
+      var results;
+      AngularJpeg.loadFromUInt8Array(FIXTURES.withScanData).then(function(_results_) {
+        results = _results_;
+      });
+      $rootScope.$digest();
+      expect(results).toEqual([{
+        type: TYPES.startOfImage,
+        segmentOffset: 2,
+        segmentSize: 0,
+        dataOffset: 2,
+        dataSize: 0
+      }, {
+        type: TYPES.startOfScan,
+        segmentOffset: 6,
+        segmentSize: 0,
+        dataOffset: 6,
+        dataSize: 1
       }, {
         type: TYPES.endOfImage,
         segmentOffset: 9,
