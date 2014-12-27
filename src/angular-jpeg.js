@@ -48,18 +48,19 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   function getSegmentOffsets(uInt8Array) {
     var segments = [];
     var offset = 0;
+    var offsetDiff = 0;
     var hasData = false;
     var previousSegment;
     var possiblePrefix, possibleMarker, isMarker;
     var type, segmentSize;
     while (offset <= uInt8Array.length - 2) {
+      offsetDiff = 1;
       possiblePrefix = uInt8Array[offset];
       possibleMarker = uInt8Array[offset + 1];
       isMarker = possiblePrefix === PREFIX && possibleMarker !== PREFIX && possibleMarker !== 0;
       if (isMarker) {
         if (hasData) {
           previousSegment = segments[segments.length - 1];
-          previousSegment.dataOffset = previousSegment.segmentOffset + previousSegment.segmentSize;
           previousSegment.dataSize = offset - previousSegment.dataOffset;
         }
         type = typeFromMarker(possibleMarker);
@@ -69,15 +70,18 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
           type: type,
           segmentOffset: offset + 2,
           segmentSize: segmentSize,
-          dataOffset: offset + 2,
+          dataOffset: offset + 2 + segmentSize,
           dataSize: 0
         });
-        offset += segmentSize + 2;
-      } else {
-        offset += 1;
+        offsetDiff = segmentSize + 2;
       }
+      offset += offsetDiff;
     }
 
+    return validate(segments);
+  }
+
+  function validate(segments) {
     if (!segments.length) {
       return $q.reject(ERRORS.noSegments);
     }

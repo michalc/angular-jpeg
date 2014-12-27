@@ -17,5 +17,7 @@
   "undef": true,
   "unused": true,
   "strict": true,
-  "trailing": true
+  "trailing": true,
+  "maxcomplexity": 7,
+  "maxdepth": 3
 }
