@@ -19,5 +19,6 @@
   "strict": true,
   "trailing": true,
   "maxcomplexity": 7,
-  "maxdepth": 3
+  "maxdepth": 3,
+  "freeze": true
 }
