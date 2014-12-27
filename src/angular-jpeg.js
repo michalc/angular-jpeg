@@ -2,45 +2,97 @@
 
 angular.module('angular-jpeg', []);
 
-angular.module('angular-jpeg').constant('ANGULAR_JPEG_MARKERS', {
-  startOfImage: 0xFFD8,
-  endOfImage: 0xFFD9
-});
-
 angular.module('angular-jpeg').constant('ANGULAR_JPEG_ERRORS', {
   noFile: 'No file found',
   fileReadError: 'Unable to read file contents',
   unknown: 'Unknown',
+  unrecognisedMarker: 'Unrecognised marker',
+  unsupportedMarker: 'Unsupported marker',
+  noSegments: 'No segments found',
   missingStartOfImageMarker: 'Missing start of image marker',
   missingEndOfImageMarker: 'Missing end of image marker'
 });
 
-angular.module('angular-jpeg').service('AngularJpeg', function($q, $window, ANGULAR_JPEG_MARKERS, ANGULAR_JPEG_ERRORS) {
+angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
+  ANGULAR_JPEG_SEGMENT_TYPES,
+  ANGULAR_JPEG_SEGMENT_PREFIX,
+  ANGULAR_JPEG_ERRORS) {
   'use strict';
 
   var ERRORS = ANGULAR_JPEG_ERRORS;
-  var MARKERS = ANGULAR_JPEG_MARKERS;
+  var TYPES = ANGULAR_JPEG_SEGMENT_TYPES;
+  var PREFIX = ANGULAR_JPEG_SEGMENT_PREFIX;
   var self = this;
 
-  function readUInt16(uInt8Array, offset) {
+  function readUInt16BigEndian(uInt8Array, offset) {
     /*jshint bitwise: false*/
     return (uInt8Array[offset] << 8) | uInt8Array[offset + 1];
   }
 
-  function validate(uInt8Array) {
-    var validStart = readUInt16(uInt8Array, 0) === MARKERS.startOfImage;
-    var validEnd = readUInt16(uInt8Array, uInt8Array.length - 2) === MARKERS.endOfImage;
-    if (!validStart) {
+  function typeFromMarker(marker) {
+    var type, key;
+    for (key in TYPES) {
+      if (TYPES.hasOwnProperty(key)) {
+        type = TYPES[key];
+        if (marker === type.marker && !type.unsupported) {
+          return TYPES[key];
+        }
+        if (marker === type.marker && type.unsupported) {
+          throw ERRORS.unsupportedMarker + ': ' + marker;
+        }
+      }
+    }
+    throw ERRORS.unrecognisedMarker + ': ' + marker;
+  }
+
+  function getSegmentOffsets(uInt8Array) {
+    var segments = [];
+    var offset = 0;
+    var hasData = false;
+    var previousSegment;
+    var possiblePrefix, possibleMarker, isMarker;
+    var type, segmentSize;
+    while (offset <= uInt8Array.length - 2) {
+      possiblePrefix = uInt8Array[offset];
+      possibleMarker = uInt8Array[offset + 1];
+      isMarker = possiblePrefix === PREFIX && possibleMarker !== PREFIX && possibleMarker !== 0;
+      if (isMarker) {
+        if (hasData) {
+          previousSegment = segments[segments.length - 1];
+          previousSegment.dataOffset = previousSegment.segmentOffset + previousSegment.segmentSize;
+          previousSegment.dataSize = offset - previousSegment.dataOffset;
+        }
+        type = typeFromMarker(possibleMarker);
+        segmentSize = type.empty ? 0 : readUInt16BigEndian(uInt8Array, offset + 2) - 2;
+        hasData = !!type.hasData;
+        segments.push({
+          type: type,
+          segmentOffset: offset + 2,
+          segmentSize: segmentSize,
+          dataOffset: offset + 2,
+          dataSize: 0
+        });
+        offset += segmentSize + 2;
+      } else {
+        offset += 1;
+      }
+    }
+
+    if (!segments.length) {
+      return $q.reject(ERRORS.noSegments);
+    }
+    if (segments[0].type !== TYPES.startOfImage) {
       return $q.reject(ERRORS.missingStartOfImageMarker);
     }
-    if (!validEnd) {
+    if (segments[segments.length - 1].type !== TYPES.endOfImage) {
       return $q.reject(ERRORS.missingEndOfImageMarker);
     }
-    return $q.when(uInt8Array);
+
+    return $q.when(segments);
   }
 
   self.loadFromUInt8Array = function loadFromUInt8Array(uInt8Array) {
-    return validate(uInt8Array);
+    return getSegmentOffsets(uInt8Array);
   };
 
   self.loadFromBuffer = function loadFromBuffer(buffer) {

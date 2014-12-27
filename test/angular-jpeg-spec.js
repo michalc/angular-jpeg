@@ -3,7 +3,7 @@
 describe('AngularJpeg', function () {
   'use strict';
   var $rootScope, $q;
-  var AngularJpeg, MARKERS, ERRORS, FIXTURES;
+  var AngularJpeg, TYPES, ERRORS, FIXTURES, PREFIX;
 
   var readAsArrayBuffer, fileReader, uInt8Array;
   var FileReaderMock = function() {
@@ -24,21 +24,21 @@ describe('AngularJpeg', function () {
     });
   }));
 
-  function toUInt8(value) {
-    /*jshint bitwise: false*/
-    return [value >> 8, value << 8 >> 8];
-  }
-
-  beforeEach(inject(function(_$rootScope_, _$q_, _AngularJpeg_, _ANGULAR_JPEG_MARKERS_, _ANGULAR_JPEG_ERRORS_) {
+  beforeEach(inject(function(_$rootScope_, _$q_, _AngularJpeg_,
+    _ANGULAR_JPEG_SEGMENT_TYPES_,
+    _ANGULAR_JPEG_SEGMENT_PREFIX_,
+    _ANGULAR_JPEG_ERRORS_) {
     $rootScope = _$rootScope_;
     $q = _$q_;
     AngularJpeg = _AngularJpeg_;
-    MARKERS = _ANGULAR_JPEG_MARKERS_;
     ERRORS = _ANGULAR_JPEG_ERRORS_;
+    TYPES = _ANGULAR_JPEG_SEGMENT_TYPES_;
+    PREFIX = _ANGULAR_JPEG_SEGMENT_PREFIX_;
+
     FIXTURES = {
-      withoutStartMarker: toUInt8(MARKERS.endOfImage),
-      withoutEndMarker: toUInt8(MARKERS.startOfImage),
-      withStartAndEndMarker: toUInt8(MARKERS.startOfImage).concat(toUInt8(MARKERS.endOfImage))
+      withoutStartMarker: [PREFIX, TYPES.endOfImage.marker],
+      withoutEndMarker: [PREFIX, TYPES.startOfImage.marker],
+      withStartAndEndMarker: [PREFIX, TYPES.startOfImage.marker, PREFIX, TYPES.endOfImage.marker]
     };
   }));
 
@@ -67,7 +67,19 @@ describe('AngularJpeg', function () {
         results = _results_;
       });
       $rootScope.$digest();
-      expect(results).toBe(FIXTURES.withStartAndEndMarker);
+      expect(results).toEqual([{
+        type: TYPES.startOfImage,
+        segmentOffset: 2,
+        segmentSize: 0,
+        dataOffset: 2,
+        dataSize: 0
+      }, {
+        type: TYPES.endOfImage,
+        segmentOffset: 4,
+        segmentSize: 0,
+        dataOffset: 4,
+        dataSize: 0
+      }]);
     });
   });
 
