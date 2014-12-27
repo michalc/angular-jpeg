@@ -39,7 +39,12 @@ describe('AngularJpeg', function () {
       withoutSegments: [PREFIX, PREFIX],
       withoutStartMarker: [PREFIX, TYPES.endOfImage.marker],
       withoutEndMarker: [PREFIX, TYPES.startOfImage.marker],
-      withStartAndEndMarker: [PREFIX, TYPES.startOfImage.marker, PREFIX, TYPES.endOfImage.marker]
+      withStartAndEndMarker: [PREFIX, TYPES.startOfImage.marker, PREFIX, TYPES.endOfImage.marker],
+      withSegmentData: [
+        PREFIX, TYPES.startOfImage.marker,
+        PREFIX, TYPES.comment.marker, 0x0, 0x3, 0x0,
+        PREFIX, TYPES.endOfImage.marker
+      ]
     };
   }));
 
@@ -77,6 +82,7 @@ describe('AngularJpeg', function () {
         results = _results_;
       });
       $rootScope.$digest();
+      expect(results.length).toBe(2);
       expect(results).toEqual([{
         type: TYPES.startOfImage,
         segmentOffset: 2,
@@ -88,6 +94,33 @@ describe('AngularJpeg', function () {
         segmentOffset: 4,
         segmentSize: 0,
         dataOffset: 4,
+        dataSize: 0
+      }]);
+    });
+
+    it('should load data with non empty segment', function() {
+      var results;
+      AngularJpeg.loadFromUInt8Array(FIXTURES.withSegmentData).then(function(_results_) {
+        results = _results_;
+      });
+      $rootScope.$digest();
+      expect(results).toEqual([{
+        type: TYPES.startOfImage,
+        segmentOffset: 2,
+        segmentSize: 0,
+        dataOffset: 2,
+        dataSize: 0
+      }, {
+        type: TYPES.comment,
+        segmentOffset: 6,
+        segmentSize: 1,
+        dataOffset: 7,
+        dataSize: 0
+      }, {
+        type: TYPES.endOfImage,
+        segmentOffset: 9,
+        segmentSize: 0,
+        dataOffset: 9,
         dataSize: 0
       }]);
     });

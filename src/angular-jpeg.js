@@ -48,13 +48,12 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   function getSegmentOffsets(uInt8Array) {
     var segments = [];
     var offset = 0;
-    var offsetDiff = 0;
     var hasData = false;
     var previousSegment;
+    var segmentOffset, dataOffset;
     var possiblePrefix, possibleMarker, isMarker;
     var type, segmentSize;
     while (offset <= uInt8Array.length - 2) {
-      offsetDiff = 1;
       possiblePrefix = uInt8Array[offset];
       possibleMarker = uInt8Array[offset + 1];
       isMarker = possiblePrefix === PREFIX && possibleMarker !== PREFIX && possibleMarker !== 0;
@@ -65,17 +64,20 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
         }
         type = typeFromMarker(possibleMarker);
         segmentSize = type.empty ? 0 : readUInt16BigEndian(uInt8Array, offset + 2) - 2;
+        segmentOffset = offset + (type.empty ? 2 : 4);
+        dataOffset = segmentOffset + segmentSize;
         hasData = !!type.hasData;
         segments.push({
           type: type,
-          segmentOffset: offset + 2,
+          segmentOffset: segmentOffset,
           segmentSize: segmentSize,
-          dataOffset: offset + 2 + segmentSize,
+          dataOffset: dataOffset,
           dataSize: 0
         });
-        offsetDiff = segmentSize + 2;
+        offset = dataOffset;
+      } else {
+        offset += 1;
       }
-      offset += offsetDiff;
     }
 
     return validate(segments);
