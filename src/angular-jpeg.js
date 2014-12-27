@@ -62,7 +62,11 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
           previousSegment = segments[segments.length - 1];
           previousSegment.dataSize = offset - previousSegment.dataOffset;
         }
-        type = typeFromMarker(possibleMarker);
+        try {
+          type = typeFromMarker(possibleMarker);
+        } catch(e) {
+          return $q.reject(e);
+        }
         segmentSize = type.empty ? 0 : readUInt16BigEndian(uInt8Array, offset + 2) - 2;
         segmentOffset = offset + (type.empty ? 2 : 4);
         dataOffset = segmentOffset + segmentSize;
@@ -98,7 +102,9 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   }
 
   self.loadFromUInt8Array = function loadFromUInt8Array(uInt8Array) {
-    return getSegmentOffsets(uInt8Array);
+    return $q.when().then(function() {
+      return getSegmentOffsets(uInt8Array);
+    });
   };
 
   self.loadFromBuffer = function loadFromBuffer(buffer) {

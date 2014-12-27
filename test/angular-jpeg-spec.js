@@ -40,6 +40,16 @@ describe('AngularJpeg', function () {
       withoutStartMarker: [PREFIX, TYPES.endOfImage.marker],
       withoutEndMarker: [PREFIX, TYPES.startOfImage.marker],
       withStartAndEndMarker: [PREFIX, TYPES.startOfImage.marker, PREFIX, TYPES.endOfImage.marker],
+      withUnsupportedMarker: [
+        PREFIX, TYPES.startOfImage.marker,
+        PREFIX, TYPES.startOfFrameExtendedSequentialDCT.marker, 0x0, 0x2,
+        PREFIX, TYPES.endOfImage.marker
+      ],
+      withUnrecognisedMarker: [
+        PREFIX, TYPES.startOfImage.marker,
+        PREFIX, 0x02,
+        PREFIX, TYPES.endOfImage.marker
+      ],
       withSegmentData: [
         PREFIX, TYPES.startOfImage.marker,
         PREFIX, TYPES.comment.marker, 0x0, 0x3, 0x0,
@@ -79,6 +89,24 @@ describe('AngularJpeg', function () {
       });
       $rootScope.$digest();
       expect(error).toBe(ERRORS.noSegments);
+    });
+
+    it('reject data with unsupported marker', function() {
+      var error;
+      AngularJpeg.loadFromUInt8Array(FIXTURES.withUnsupportedMarker).catch(function(_error_) {
+        error = _error_;
+      });
+      $rootScope.$digest();
+      expect(error).toBe(ERRORS.unsupportedMarker + ': ' + TYPES.startOfFrameExtendedSequentialDCT.marker);
+    });
+
+    it('reject data with unrecogised marker', function() {
+      var error;
+      AngularJpeg.loadFromUInt8Array(FIXTURES.withUnrecognisedMarker).catch(function(_error_) {
+        error = _error_;
+      });
+      $rootScope.$digest();
+      expect(error).toBe(ERRORS.unrecognisedMarker + ': ' + 0x02);
     });
 
     it('should load data with start and end markers', function() {
