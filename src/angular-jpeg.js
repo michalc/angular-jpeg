@@ -29,6 +29,10 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     return (uInt8Array[offset] << 8) | uInt8Array[offset + 1];
   }
 
+  for (var name in TYPES) {
+    TYPES[name].name = name;
+  }
+
   function typeFromMarker(marker) {
     var type, key;
     for (key in TYPES) {
@@ -112,12 +116,25 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
         segment.dataContents = new $window.Uint8Array(buffer, segment.dataOffset, segment.dataSize);
       }
     });
+    return segments;
+  }
+
+  function groupSegmentsByType(segments) {
+    var grouped = {};
+    segments.forEach(function(segment) {
+      grouped[segment.type.name] = grouped[segment.type.name] || []
+      grouped[segment.type.name].push(segment);
+    });
+    return grouped;
   }
 
   self.loadSegmentsFromBuffer = function loadSegmentsFromBuffer(buffer) {
     return getSegmentOffsets(new $window.Uint8Array(buffer)).then(function(segments) {
-      attachContents(buffer, segments);
-      return segments;
+      return validate(segments);
+    }).then(function(segments) {
+      return attachContents(buffer, segments);
+    }).then(function(segments) {
+      return groupSegmentsByType(segments);
     });
   };
 

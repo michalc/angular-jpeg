@@ -113,24 +113,26 @@ describe('AngularJpeg', function () {
         results = _results_;
       });
       $rootScope.$digest();
-      expect(results.length).toBe(2);
-      expect(results).toEqual([{
-        type: TYPES.startOfImage,
-        segmentOffset: 2,
-        segmentSize: 0,
-        segmentContents: new $window.Uint8Array(),
-        dataOffset: 2,
-        dataSize: 0,
-        dataContents: new $window.Uint8Array()
-      }, {
-        type: TYPES.endOfImage,
-        segmentOffset: 4,
-        segmentSize: 0,
-        segmentContents: new $window.Uint8Array(),
-        dataOffset: 4,
-        dataSize: 0,
-        dataContents: new $window.Uint8Array()
-      }]);
+      expect(results).toEqual({
+        startOfImage: [{
+          type: TYPES.startOfImage,
+          segmentOffset: 2,
+          segmentSize: 0,
+          segmentContents: new $window.Uint8Array(),
+          dataOffset: 2,
+          dataSize: 0,
+          dataContents: new $window.Uint8Array()
+        }],
+        endOfImage: [{
+          type: TYPES.endOfImage,
+          segmentOffset: 4,
+          segmentSize: 0,
+          segmentContents: new $window.Uint8Array(),
+          dataOffset: 4,
+          dataSize: 0,
+          dataContents: new $window.Uint8Array()
+        }]
+      });
     });
 
     it('should load data with non empty segment', function() {
@@ -140,31 +142,35 @@ describe('AngularJpeg', function () {
         results = _results_;
       });
       $rootScope.$digest();
-      expect(results).toEqual([{
-        type: TYPES.startOfImage,
-        segmentOffset: 2,
-        segmentSize: 0,
-        segmentContents: new $window.Uint8Array(),
-        dataOffset: 2,
-        dataSize: 0,
-        dataContents: new $window.Uint8Array()
-      }, {
-        type: TYPES.comment,
-        segmentOffset: 6,
-        segmentSize: 1,
-        segmentContents: new $window.Uint8Array(buffer, 6, 1),
-        dataOffset: 7,
-        dataSize: 0,
-        dataContents: new $window.Uint8Array()
-      }, {
-        type: TYPES.endOfImage,
-        segmentOffset: 9,
-        segmentSize: 0,
-        segmentContents: new $window.Uint8Array(),
-        dataOffset: 9,
-        dataSize: 0,
-        dataContents: new $window.Uint8Array()
-      }]);
+      expect(results).toEqual({
+        startOfImage: [{
+          type: TYPES.startOfImage,
+          segmentOffset: 2,
+          segmentSize: 0,
+          segmentContents: new $window.Uint8Array(),
+          dataOffset: 2,
+          dataSize: 0,
+          dataContents: new $window.Uint8Array()
+        }],
+        comment: [{
+          type: TYPES.comment,
+          segmentOffset: 6,
+          segmentSize: 1,
+          segmentContents: new $window.Uint8Array(buffer, 6, 1),
+          dataOffset: 7,
+          dataSize: 0,
+          dataContents: new $window.Uint8Array()
+        }],
+        endOfImage: [{
+          type: TYPES.endOfImage,
+          segmentOffset: 9,
+          segmentSize: 0,
+          segmentContents: new $window.Uint8Array(),
+          dataOffset: 9,
+          dataSize: 0,
+          dataContents: new $window.Uint8Array()
+        }]
+      });
     });
 
     it('should load data with scan data', function() {
@@ -174,31 +180,35 @@ describe('AngularJpeg', function () {
         results = _results_;
       });
       $rootScope.$digest();
-      expect(results).toEqual([{
-        type: TYPES.startOfImage,
-        segmentOffset: 2,
-        segmentSize: 0,
-        segmentContents: new $window.Uint8Array(),
-        dataOffset: 2,
-        dataSize: 0,
-        dataContents: new $window.Uint8Array()
-      }, {
-        type: TYPES.startOfScan,
-        segmentOffset: 6,
-        segmentSize: 0,
-        segmentContents: new $window.Uint8Array(),
-        dataOffset: 6,
-        dataSize: 1,
-        dataContents: new $window.Uint8Array(buffer, 6, 1)
-      }, {
-        type: TYPES.endOfImage,
-        segmentOffset: 9,
-        segmentSize: 0,
-        segmentContents: new $window.Uint8Array(),
-        dataOffset: 9,
-        dataSize: 0,
-        dataContents: new $window.Uint8Array()
-      }]);
+      expect(results).toEqual({
+        startOfImage: [{
+          type: TYPES.startOfImage,
+          segmentOffset: 2,
+          segmentSize: 0,
+          segmentContents: new $window.Uint8Array(),
+          dataOffset: 2,
+          dataSize: 0,
+          dataContents: new $window.Uint8Array()
+        }],
+        startOfScan: [{
+          type: TYPES.startOfScan,
+          segmentOffset: 6,
+          segmentSize: 0,
+          segmentContents: new $window.Uint8Array(),
+          dataOffset: 6,
+          dataSize: 1,
+          dataContents: new $window.Uint8Array(buffer, 6, 1)
+        }],
+        endOfImage: [{
+          type: TYPES.endOfImage,
+          segmentOffset: 9,
+          segmentSize: 0,
+          segmentContents: new $window.Uint8Array(),
+          dataOffset: 9,
+          dataSize: 0,
+          dataContents: new $window.Uint8Array()
+        }]
+      });
     });
   });
 
