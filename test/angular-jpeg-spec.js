@@ -1,33 +1,31 @@
-/*global describe, module, beforeEach, it, expect, inject, jasmine, spyOn*/
+/*global describe, module, beforeEach, afterEach, it, expect, inject, jasmine, spyOn*/
 
 describe('AngularJpeg', function () {
   'use strict';
-  var $rootScope, $q;
+  var $window, $rootScope, $q;
   var AngularJpeg, TYPES, ERRORS, FIXTURES, PREFIX;
 
-  var readAsArrayBuffer, fileReader, uInt8Array;
+  var readAsArrayBuffer, fileReader;
   var FileReaderMock = function() {
     fileReader = this;
     this.readAsArrayBuffer = readAsArrayBuffer;
   };
   var FileMock = function() {};
-  var BufferMock = function() {};
-  var Uint8ArrayMock = function(buffer) {
-    uInt8Array = this;
-    this.buffer = buffer;
-  };
 
-  beforeEach(module('angular-jpeg', function($provide) {
-    $provide.value('$window', {
-      FileReader: FileReaderMock,
-      Uint8Array: Uint8ArrayMock
-    });
-  }));
+  function toBuffer(array) {
+    var buffer = new $window.ArrayBuffer(array.length);
+    var view = new $window.Uint8Array(buffer);
+    view.set(array);
+    return buffer;
+  }
 
-  beforeEach(inject(function(_$rootScope_, _$q_, _AngularJpeg_,
+  beforeEach(module('angular-jpeg'));
+
+  beforeEach(inject(function(_$window_, _$rootScope_, _$q_, _AngularJpeg_,
     _ANGULAR_JPEG_SEGMENT_TYPES_,
     _ANGULAR_JPEG_SEGMENT_PREFIX_,
     _ANGULAR_JPEG_ERRORS_) {
+    $window = _$window_;
     $rootScope = _$rootScope_;
     $q = _$q_;
     AngularJpeg = _AngularJpeg_;
@@ -63,10 +61,10 @@ describe('AngularJpeg', function () {
     };
   }));
 
-  describe('loadFromUInt8Array', function() {
+  describe('loadFromBuffer', function() {
     it('should reject data without a start marker', function() {
       var error;
-      AngularJpeg.loadFromUInt8Array(FIXTURES.withoutStartMarker).catch(function(_error_) {
+      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withoutStartMarker)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -75,7 +73,7 @@ describe('AngularJpeg', function () {
 
     it('should reject data without an end marker', function() {
       var error;
-      AngularJpeg.loadFromUInt8Array(FIXTURES.withoutEndMarker).catch(function(_error_) {
+      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withoutEndMarker)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -84,7 +82,7 @@ describe('AngularJpeg', function () {
 
     it('reject data without any segments', function() {
       var error;
-      AngularJpeg.loadFromUInt8Array(FIXTURES.withoutSegments).catch(function(_error_) {
+      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withoutSegments)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -93,7 +91,7 @@ describe('AngularJpeg', function () {
 
     it('reject data with unsupported marker', function() {
       var error;
-      AngularJpeg.loadFromUInt8Array(FIXTURES.withUnsupportedMarker).catch(function(_error_) {
+      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withUnsupportedMarker)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -102,7 +100,7 @@ describe('AngularJpeg', function () {
 
     it('reject data with unrecogised marker', function() {
       var error;
-      AngularJpeg.loadFromUInt8Array(FIXTURES.withUnrecognisedMarker).catch(function(_error_) {
+      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withUnrecognisedMarker)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -111,7 +109,7 @@ describe('AngularJpeg', function () {
 
     it('should load data with start and end markers', function() {
       var results;
-      AngularJpeg.loadFromUInt8Array(FIXTURES.withStartAndEndMarker).then(function(_results_) {
+      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withStartAndEndMarker)).then(function(_results_) {
         results = _results_;
       });
       $rootScope.$digest();
@@ -120,20 +118,25 @@ describe('AngularJpeg', function () {
         type: TYPES.startOfImage,
         segmentOffset: 2,
         segmentSize: 0,
+        segmentContents: new $window.Uint8Array(),
         dataOffset: 2,
-        dataSize: 0
+        dataSize: 0,
+        dataContents: new $window.Uint8Array()
       }, {
         type: TYPES.endOfImage,
         segmentOffset: 4,
         segmentSize: 0,
+        segmentContents: new $window.Uint8Array(),
         dataOffset: 4,
-        dataSize: 0
+        dataSize: 0,
+        dataContents: new $window.Uint8Array()
       }]);
     });
 
     it('should load data with non empty segment', function() {
       var results;
-      AngularJpeg.loadFromUInt8Array(FIXTURES.withSegmentData).then(function(_results_) {
+      var buffer = toBuffer(FIXTURES.withSegmentData);
+      AngularJpeg.loadFromBuffer(buffer).then(function(_results_) {
         results = _results_;
       });
       $rootScope.$digest();
@@ -141,26 +144,33 @@ describe('AngularJpeg', function () {
         type: TYPES.startOfImage,
         segmentOffset: 2,
         segmentSize: 0,
+        segmentContents: new $window.Uint8Array(),
         dataOffset: 2,
-        dataSize: 0
+        dataSize: 0,
+        dataContents: new $window.Uint8Array()
       }, {
         type: TYPES.comment,
         segmentOffset: 6,
         segmentSize: 1,
+        segmentContents: new $window.Uint8Array(buffer, 6, 1),
         dataOffset: 7,
-        dataSize: 0
+        dataSize: 0,
+        dataContents: new $window.Uint8Array()
       }, {
         type: TYPES.endOfImage,
         segmentOffset: 9,
         segmentSize: 0,
+        segmentContents: new $window.Uint8Array(),
         dataOffset: 9,
-        dataSize: 0
+        dataSize: 0,
+        dataContents: new $window.Uint8Array()
       }]);
     });
 
     it('should load data with scan data', function() {
       var results;
-      AngularJpeg.loadFromUInt8Array(FIXTURES.withScanData).then(function(_results_) {
+      var buffer = toBuffer(FIXTURES.withScanData);
+      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withScanData)).then(function(_results_) {
         results = _results_;
       });
       $rootScope.$digest();
@@ -168,31 +178,27 @@ describe('AngularJpeg', function () {
         type: TYPES.startOfImage,
         segmentOffset: 2,
         segmentSize: 0,
+        segmentContents: new $window.Uint8Array(),
         dataOffset: 2,
-        dataSize: 0
+        dataSize: 0,
+        dataContents: new $window.Uint8Array()
       }, {
         type: TYPES.startOfScan,
         segmentOffset: 6,
         segmentSize: 0,
+        segmentContents: new $window.Uint8Array(),
         dataOffset: 6,
-        dataSize: 1
+        dataSize: 1,
+        dataContents: new $window.Uint8Array(buffer, 6, 1)
       }, {
         type: TYPES.endOfImage,
         segmentOffset: 9,
         segmentSize: 0,
+        segmentContents: new $window.Uint8Array(),
         dataOffset: 9,
-        dataSize: 0
+        dataSize: 0,
+        dataContents: new $window.Uint8Array()
       }]);
-    });
-  });
-
-  describe('loadFromBuffer', function() {
-    it('should pass a new Uint8Array to loadFromUInt8Array', function() {
-      spyOn(AngularJpeg, 'loadFromUInt8Array');
-      var buffer = new BufferMock();
-      AngularJpeg.loadFromBuffer(buffer);
-      expect(AngularJpeg.loadFromUInt8Array).toHaveBeenCalledWith(uInt8Array);
-      expect(uInt8Array.buffer).toBe(buffer);
     });
   });
 
@@ -203,6 +209,17 @@ describe('AngularJpeg', function () {
     var loadFromBufferError;
     var loadFromFileResults;
     var loadFromFileError;
+    var originalFileReader;
+
+    beforeEach(function() {
+      originalFileReader = $window.FileReader;
+      $window.FileReader = FileReaderMock;
+    });
+
+    afterEach(function() {
+      $window.FileReader = originalFileReader;
+      originalFileReader = null;
+    });
 
     beforeEach(function() {
       loadFromBufferDeferred = $q.defer();

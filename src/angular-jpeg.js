@@ -75,8 +75,10 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
           type: type,
           segmentOffset: segmentOffset,
           segmentSize: segmentSize,
+          segmentContents: new $window.Uint8Array(0),
           dataOffset: dataOffset,
-          dataSize: 0
+          dataSize: 0,
+          dataContents: new $window.Uint8Array(0)
         });
         offset = dataOffset;
       } else {
@@ -101,12 +103,22 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     return $q.when(segments);
   }
 
-  self.loadFromUInt8Array = function loadFromUInt8Array(uInt8Array) {
-    return getSegmentOffsets(uInt8Array);
-  };
+  function attachContents(buffer, segments) {
+    segments.forEach(function(segment) {
+      if (segment.segmentSize) {
+        segment.segmentContents = new $window.Uint8Array(buffer, segment.segmentOffset, segment.segmentSize);
+      }
+      if (segment.dataSize) {
+        segment.dataContents = new $window.Uint8Array(buffer, segment.dataOffset, segment.dataSize);
+      }
+    });
+  }
 
   self.loadFromBuffer = function loadFromBuffer(buffer) {
-    return self.loadFromUInt8Array(new $window.Uint8Array(buffer));
+    return getSegmentOffsets(new $window.Uint8Array(buffer)).then(function(segments) {
+      attachContents(buffer, segments);
+      return segments;
+    });
   };
 
   self.loadFromFile = function loadFromFile(file) {
