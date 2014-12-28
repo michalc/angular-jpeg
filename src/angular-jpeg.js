@@ -114,14 +114,14 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     });
   }
 
-  self.loadFromBuffer = function loadFromBuffer(buffer) {
+  self.loadSegmentsFromBuffer = function loadSegmentsFromBuffer(buffer) {
     return getSegmentOffsets(new $window.Uint8Array(buffer)).then(function(segments) {
       attachContents(buffer, segments);
       return segments;
     });
   };
 
-  self.loadFromFile = function loadFromFile(file) {
+  self.loadSegmentsFromFile = function loadFromFile(file) {
     if (!file) {
       return $q.reject(ERRORS.noFile);
     }
@@ -133,8 +133,8 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
     reader.onload = function(e) {
       var buffer = e.target.result;
-      self.loadFromBuffer(buffer).then(function(uInt8Array) {
-        deferred.resolve(uInt8Array);
+      self.loadSegmentsFromBuffer(buffer).then(function(segments) {
+        deferred.resolve(segments);
       }, function(error) {
         deferred.reject(error);
       });

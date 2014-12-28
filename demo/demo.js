@@ -10,8 +10,8 @@
     $scope.$on('dropFile::dropped', function(e, files) {
       $scope.state = 'loading';
 
-      AngularJpeg.loadFromFile(files[0]).then(function(uInt8Array) {
-        $scope.view = uInt8Array;
+      AngularJpeg.loadSegmentsFromFile(files[0]).then(function(segments) {
+        $scope.segments = segments;
         $scope.state = 'loaded';
       }, function(error) {
         $scope.state = 'error';

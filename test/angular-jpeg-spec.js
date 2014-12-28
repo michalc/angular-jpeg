@@ -61,10 +61,10 @@ describe('AngularJpeg', function () {
     };
   }));
 
-  describe('loadFromBuffer', function() {
+  describe('loadSegmentsFromBuffer', function() {
     it('should reject data without a start marker', function() {
       var error;
-      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withoutStartMarker)).catch(function(_error_) {
+      AngularJpeg.loadSegmentsFromBuffer(toBuffer(FIXTURES.withoutStartMarker)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -73,7 +73,7 @@ describe('AngularJpeg', function () {
 
     it('should reject data without an end marker', function() {
       var error;
-      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withoutEndMarker)).catch(function(_error_) {
+      AngularJpeg.loadSegmentsFromBuffer(toBuffer(FIXTURES.withoutEndMarker)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -82,7 +82,7 @@ describe('AngularJpeg', function () {
 
     it('reject data without any segments', function() {
       var error;
-      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withoutSegments)).catch(function(_error_) {
+      AngularJpeg.loadSegmentsFromBuffer(toBuffer(FIXTURES.withoutSegments)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -91,7 +91,7 @@ describe('AngularJpeg', function () {
 
     it('reject data with unsupported marker', function() {
       var error;
-      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withUnsupportedMarker)).catch(function(_error_) {
+      AngularJpeg.loadSegmentsFromBuffer(toBuffer(FIXTURES.withUnsupportedMarker)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -100,7 +100,7 @@ describe('AngularJpeg', function () {
 
     it('reject data with unrecogised marker', function() {
       var error;
-      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withUnrecognisedMarker)).catch(function(_error_) {
+      AngularJpeg.loadSegmentsFromBuffer(toBuffer(FIXTURES.withUnrecognisedMarker)).catch(function(_error_) {
         error = _error_;
       });
       $rootScope.$digest();
@@ -109,7 +109,7 @@ describe('AngularJpeg', function () {
 
     it('should load data with start and end markers', function() {
       var results;
-      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withStartAndEndMarker)).then(function(_results_) {
+      AngularJpeg.loadSegmentsFromBuffer(toBuffer(FIXTURES.withStartAndEndMarker)).then(function(_results_) {
         results = _results_;
       });
       $rootScope.$digest();
@@ -136,7 +136,7 @@ describe('AngularJpeg', function () {
     it('should load data with non empty segment', function() {
       var results;
       var buffer = toBuffer(FIXTURES.withSegmentData);
-      AngularJpeg.loadFromBuffer(buffer).then(function(_results_) {
+      AngularJpeg.loadSegmentsFromBuffer(buffer).then(function(_results_) {
         results = _results_;
       });
       $rootScope.$digest();
@@ -170,7 +170,7 @@ describe('AngularJpeg', function () {
     it('should load data with scan data', function() {
       var results;
       var buffer = toBuffer(FIXTURES.withScanData);
-      AngularJpeg.loadFromBuffer(toBuffer(FIXTURES.withScanData)).then(function(_results_) {
+      AngularJpeg.loadSegmentsFromBuffer(toBuffer(FIXTURES.withScanData)).then(function(_results_) {
         results = _results_;
       });
       $rootScope.$digest();
@@ -202,13 +202,13 @@ describe('AngularJpeg', function () {
     });
   });
 
-  describe('loadFromFile', function() {
-    var loadFromBufferDeferred;
+  describe('loadSegmentsFromFile', function() {
+    var loadSegmentsFromBufferDeferred;
     var readAsArrayBufferResults;
-    var loadFromBufferResults;
-    var loadFromBufferError;
-    var loadFromFileResults;
-    var loadFromFileError;
+    var loadSegmentsFromBufferResults;
+    var loadSegmentsFromBufferError;
+    var loadSegmentsFromFileResults;
+    var loadSegmentsFromFileError;
     var originalFileReader;
 
     beforeEach(function() {
@@ -222,28 +222,28 @@ describe('AngularJpeg', function () {
     });
 
     beforeEach(function() {
-      loadFromBufferDeferred = $q.defer();
-      spyOn(AngularJpeg, 'loadFromBuffer').and.returnValue(loadFromBufferDeferred.promise);
+      loadSegmentsFromBufferDeferred = $q.defer();
+      spyOn(AngularJpeg, 'loadSegmentsFromBuffer').and.returnValue(loadSegmentsFromBufferDeferred.promise);
       readAsArrayBufferResults = {};
-      loadFromBufferResults = {};
-      loadFromBufferError = {};
-      loadFromFileResults = null;
-      loadFromFileError = null;
+      loadSegmentsFromBufferResults = {};
+      loadSegmentsFromBufferError = {};
+      loadSegmentsFromFileResults = null;
+      loadSegmentsFromFileError = null;
     });
 
     it('should reject if no file passed', function() {
-      AngularJpeg.loadFromFile(null).catch(function(_loadFromFileError_) {
-        loadFromFileError = _loadFromFileError_;
+      AngularJpeg.loadSegmentsFromFile(null).catch(function(_loadSegmentsFromFileError_) {
+        loadSegmentsFromFileError = _loadSegmentsFromFileError_;
       });
       $rootScope.$digest();
-      expect(loadFromFileError).toBe(ERRORS.noFile);
+      expect(loadSegmentsFromFileError).toBe(ERRORS.noFile);
     });
 
 
     it('should pass the file to readAsArrayBuffer', function() {
       readAsArrayBuffer = jasmine.createSpy('readAsArrayBuffer');
       var file = new FileMock();
-      AngularJpeg.loadFromFile(file);
+      AngularJpeg.loadSegmentsFromFile(file);
       expect(readAsArrayBuffer).toHaveBeenCalledWith(file);
     });
 
@@ -252,11 +252,11 @@ describe('AngularJpeg', function () {
         readAsArrayBuffer = function() {
           fileReader.onerror();
         };
-        AngularJpeg.loadFromFile(new FileMock()).catch(function(_loadFromFileError_) {
-          loadFromFileError = _loadFromFileError_;
+        AngularJpeg.loadSegmentsFromFile(new FileMock()).catch(function(_loadSegmentsFromFileError_) {
+          loadSegmentsFromFileError = _loadSegmentsFromFileError_;
         });
         $rootScope.$digest();
-        expect(loadFromFileError).toBe(ERRORS.fileReadError);
+        expect(loadSegmentsFromFileError).toBe(ERRORS.fileReadError);
       });
     });
 
@@ -269,30 +269,30 @@ describe('AngularJpeg', function () {
             }
           });
         };
-        AngularJpeg.loadFromFile(new FileMock()).then(function(_loadFromFileResults_) {
-          loadFromFileResults = _loadFromFileResults_;
-        }, function(_loadFromFileError_) {
-          loadFromFileError = _loadFromFileError_;
+        AngularJpeg.loadSegmentsFromFile(new FileMock()).then(function(_loadSegmentsFromFileResults_) {
+          loadSegmentsFromFileResults = _loadSegmentsFromFileResults_;
+        }, function(_loadSegmentsFromFileError_) {
+          loadSegmentsFromFileError = _loadSegmentsFromFileError_;
         });
       });
 
-      it('should pass the results of readAsArrayBuffer to loadFromBuffer', function() {
-        expect(AngularJpeg.loadFromBuffer).toHaveBeenCalledWith(readAsArrayBufferResults);
+      it('should pass the results of readAsArrayBuffer to loadSegmentsFromBuffer', function() {
+        expect(AngularJpeg.loadSegmentsFromBuffer).toHaveBeenCalledWith(readAsArrayBufferResults);
       });
 
       describe('and on validation error', function() {
-        it('should reject with the error from loadFromBuffer', function() {
-          loadFromBufferDeferred.reject(loadFromBufferError);
+        it('should reject with the error from loadSegmentsFromBuffer', function() {
+          loadSegmentsFromBufferDeferred.reject(loadSegmentsFromBufferError);
           $rootScope.$digest();
-          expect(loadFromFileError).toBe(loadFromBufferError);
+          expect(loadSegmentsFromFileError).toBe(loadSegmentsFromBufferError);
         });
       });
 
-      describe('and on loadFromBufferSuccess', function() {
-        it('should resolve with the results from loadFromBuffer', function() {
-          loadFromBufferDeferred.resolve(loadFromBufferResults);
+      describe('and on loadSegmentsFromBufferSuccess', function() {
+        it('should resolve with the results from loadSegmentsFromBuffer', function() {
+          loadSegmentsFromBufferDeferred.resolve(loadSegmentsFromBufferResults);
           $rootScope.$digest();
-          expect(loadFromFileResults).toBe(loadFromBufferResults);
+          expect(loadSegmentsFromFileResults).toBe(loadSegmentsFromBufferResults);
         });
       });
     });
