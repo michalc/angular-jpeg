@@ -31,6 +31,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
   // For convenience
   for (var name in TYPES) {
+    /* istanbul ignore else */
     if (TYPES.hasOwnProperty(name)) {
       TYPES[name].name = name;
     }
@@ -39,6 +40,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   function typeFromMarker(marker) {
     var type, key;
     for (key in TYPES) {
+      /* istanbul ignore else */
       if (TYPES.hasOwnProperty(key)) {
         type = TYPES[key];
         if (marker === type.marker && !type.unsupported) {
