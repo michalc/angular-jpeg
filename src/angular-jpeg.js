@@ -102,9 +102,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   }
 
   self.loadFromUInt8Array = function loadFromUInt8Array(uInt8Array) {
-    return $q.when().then(function() {
-      return getSegmentOffsets(uInt8Array);
-    });
+    return getSegmentOffsets(uInt8Array);
   };
 
   self.loadFromBuffer = function loadFromBuffer(buffer) {
