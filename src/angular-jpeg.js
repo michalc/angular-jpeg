@@ -171,7 +171,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     return deferred.promise;
   };
 
-  self._huffmanTreeFromTable = function(table) {
+  self._huffmanTreeFromTable = function() {
     return {};
   };
 });

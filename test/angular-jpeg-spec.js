@@ -309,11 +309,26 @@ describe('AngularJpeg', function () {
   });
 
   describe('_huffmanTreeFromTable', function() {
-    it('should decode an example tree', function() {
+    it('should decode a trivial tree', function() {
       var table = [
-        []
+        [1],
+        [2, 3]
+      ];
+      var tree = {
+        0: 1,
+        1: {
+          0: 2,
+          1: 3
+        }
+      };
+      expect(AngularJpeg._huffmanTreeFromTable(table)).toEqual(tree);
+    });
+
+    it('should decode a complex tree', function() {
+      var table = [
+        [],
         [2,3],
-        []
+        [],
         [4,5,6],
         [7,8],
         [],
@@ -357,7 +372,7 @@ describe('AngularJpeg', function () {
             }
           }
         }
-      }
+      };
       expect(AngularJpeg._huffmanTreeFromTable(table)).toEqual(tree);
     });
   });
