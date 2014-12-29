@@ -202,15 +202,14 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
   self._huffmanTreeFromTable = function(table) {
     var root = newNode();
-    var branchPoint = root;
+    var searchBelow = root;
     var node = root;
     var bit;
 
     table.forEach(function(values, codeLength) {
       values.forEach(function(value) {
-        // Find available descendent of branching point
-        // of codeLength - 1
-        node = branchPoint;
+        // Search for node of codeLength - 1
+        node = searchBelow;
         while (node.codeLength < codeLength - 1) {
           if (angular.isObject(node.children[0]) && !node.children[0].full) {
             node = node.children[0];
@@ -223,16 +222,19 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
           }
         }
 
+        // Set value in node child
         bit = Object.keys(node.children).length;
         node.children[bit] = value;
+
+        // Mark this and parent nodes as full to avoid
+        // looking down them in later iterations
         if (bit === 1) {
-          // Mark parent node(s) as full
           node.full = true;
           while (node.parent && node.bit === 1) {
             node = node.parent;
             node.full = true;
           }
-          branchPoint = node.parent;
+          searchBelow = node.parent;
         }
       });
     });
