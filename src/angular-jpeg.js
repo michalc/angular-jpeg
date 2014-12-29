@@ -190,9 +190,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       delete node.parent;
       delete node.bit;
       delete node.codeLength;
-      if (node.children[0]) {
-        node[0] = convertNode(node.children[0]);
-      }
+      node[0] = convertNode(node.children[0]);
       if (node.children[1]) {
         node[1] = convertNode(node.children[1]);
       }
