@@ -171,7 +171,80 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     return deferred.promise;
   };
 
-  self._huffmanTreeFromTable = function() {
-    return {};
+  self._huffmanTreeFromTable = function(table) {
+    var newNode = function(parent, bit) {
+      return {
+        children: {},
+        parent: parent,
+        full: false,
+        codeLength: parent ? parent.codeLength + 1 : 0,
+        bit: bit || null
+      };
+    };
+
+    //
+    var root = newNode();
+    var branchPoint = root;
+    var node = root;
+    var codeLength, i, value;
+    var parent;
+
+    for (codeLength in table) {
+      codeLength = parseInt(codeLength);
+      if (table.hasOwnProperty(codeLength)) {
+        for (i = 0; i < table[codeLength].length; i++) {
+          value = table[codeLength][i];
+
+          // Find available descendent of branching point
+          // of codeLength - 1
+          node = branchPoint;
+          while (node.codeLength < codeLength - 1) {
+            if (!node.children[0]) {
+              node.children[0] = newNode(node, 0);
+              node = node.children[0];
+            } else if (!node.children[1]) {
+              node.children[1] = newNode(node, 1);
+              node = node.children[1];
+            } else if (angular.isObject(node.children[0]) && !node.children[0].full) {
+              node = node.children[0];
+            } else if (angular.isObject(node.children[1]) && !node.children[1].full) {
+              node = node.children[1];
+            } else {
+              throw 'Error';
+            }
+          }
+          if (!node.children[0]) {
+            node.children[0] = value;
+          } else if (!node.children[1]) {
+            node.children[1] = value;
+
+            // Mark parent node(s) as full
+            node.full = true;
+            while (node.parent && node.parent.bit == 1) {
+              node.parent.full = true;
+              node = node.parent;
+            }
+            if (node.parent) {
+              branchPoint = node.parent;
+            }
+          }
+        }
+      }
+    }
+
+    // Convert to simple structure
+    function convert(node) {
+      if (!angular.isObject(node)) return node;
+      delete node.full;
+      delete node.parent;
+      delete node.bit;
+      delete node.codeLength;
+      if (node.children[0]) node[0] = convert(node.children[0]);
+      if (node.children[1]) node[1] = convert(node.children[1]);
+      delete node.children;
+      return node;
+    }
+    convert(root);
+    return root;
   };
 });
