@@ -310,10 +310,10 @@ describe('AngularJpeg', function () {
 
   describe('_huffmanTreeFromTable', function() {
     it('should decode a trivial tree', function() {
-      var table = [
-        [1],
-        [2, 3]
-      ];
+      var table = {
+        1: [1],
+        2: [2, 3]
+      };
       var tree = {
         0: 1,
         1: {
@@ -325,15 +325,12 @@ describe('AngularJpeg', function () {
     });
 
     it('should decode a complex tree', function() {
-      var table = [
-        [],
-        [2,3],
-        [],
-        [4,5,6],
-        [7,8],
-        [],
-        [9,10,11,12]
-      ];
+      var table = {
+        2: [2, 3],
+        4: [4, 5, 6],
+        5: [7, 8],
+        7: [9,10,11,12]
+      };
       var tree = {
         0: {
           0: 2,
