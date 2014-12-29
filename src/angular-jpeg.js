@@ -183,17 +183,17 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
   // Convert to simple structure
   function convertNode(node) {
-      if (!angular.isObject(node)) {
-        return node;
-      }
-      var converted = {
-        0: convertNode(node.children[0])
-      };
-      if (node.children[1]) {
-        converted[1] = convertNode(node.children[1]);
-      }
-      return converted;
+    if (!angular.isObject(node)) {
+      return node;
     }
+    var converted = {
+      0: convertNode(node.children[0])
+    };
+    if (node.children[1]) {
+      converted[1] = convertNode(node.children[1]);
+    }
+    return converted;
+  }
 
   self._huffmanTreeFromTable = function(table) {
     var root = newNode();
@@ -234,6 +234,6 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       });
     });
 
-    return convertNode(root);;
+    return convertNode(root);
   };
 });
