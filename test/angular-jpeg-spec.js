@@ -309,12 +309,27 @@ describe('AngularJpeg', function () {
   });
 
   describe('_huffmanTreeFromTable', function() {
-    it('should decode a trivial tree', function() {
-      var table = {
-        0: [],
-        1: [1],
-        2: [2, 3]
+    it('should decode a small table starting with codes of length 2', function() {
+      var table = [
+        [],
+        [],
+        [2, 3]
+      ];
+      var tree = {
+        0: {
+          0: 2,
+          1: 3
+        }
       };
+      expect(AngularJpeg._huffmanTreeFromTable(table)).toEqual(tree);
+    });
+
+    it('should decode a small table starting with codes of length 1', function() {
+      var table = [
+        [],
+        [1],
+        [2, 3]
+      ];
       var tree = {
         0: 1,
         1: {
@@ -326,16 +341,16 @@ describe('AngularJpeg', function () {
     });
 
     it('should decode a complex tree', function() {
-      var table = {
-        0: [],
-        1: [],
-        2: [2, 3],
-        3: [],
-        4: [4, 5, 6],
-        5: [7, 8, 9],
-        6: [],
-        7: [10,11,12,13]
-      };
+      var table = [
+        [],
+        [],
+        [2, 3],
+        [],
+        [4, 5, 6],
+        [7, 8, 9],
+        [],
+        [10,11,12,13]
+      ];
       var tree = {
         0: {
           0: 2,
@@ -361,14 +376,12 @@ describe('AngularJpeg', function () {
                 0: 9,
                 1: {
                   0: {
-                    0: {
-                      0: 10,
-                      1: 11
-                    },
-                    1: {
-                      0: 12,
-                      1: 13
-                    }
+                    0: 10,
+                    1: 11
+                  },
+                  1: {
+                    0: 12,
+                    1: 13
                   }
                 }
               }
