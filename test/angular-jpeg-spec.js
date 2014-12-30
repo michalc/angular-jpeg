@@ -392,7 +392,12 @@ describe('AngularJpeg', function () {
 
   describe('_huffmanTableFromSegment', function() {
     it('should return a table', function() {
+      /*jshint bitwise: false*/
+      var typeBit = 1 << 4;   // AC
+      var numberBit = 1 << 1; // Number 2
+      var informationByte = typeBit | numberBit;
       var segmentContents = [
+        informationByte,
         0, 1, 2, 0, 3, 4, 0, 5, 6, 0, 0, 0, 0, 0, 7, 0,
                                     // Length 1
         1,                          // Length 2
@@ -416,24 +421,29 @@ describe('AngularJpeg', function () {
         segmentOffset: 0
       };
       var table = [
-        new $window.Uint8Array(buffer, 16, 0),
-        new $window.Uint8Array(buffer, 16, 1),
-        new $window.Uint8Array(buffer, 17, 2),
-        new $window.Uint8Array(buffer, 19, 0),
-        new $window.Uint8Array(buffer, 19, 3),
-        new $window.Uint8Array(buffer, 22, 4),
-        new $window.Uint8Array(buffer, 26, 0),
-        new $window.Uint8Array(buffer, 26, 5),
-        new $window.Uint8Array(buffer, 31, 6),
-        new $window.Uint8Array(buffer, 37, 0),
-        new $window.Uint8Array(buffer, 37, 0),
-        new $window.Uint8Array(buffer, 37, 0),
-        new $window.Uint8Array(buffer, 37, 0),
-        new $window.Uint8Array(buffer, 37, 0),
-        new $window.Uint8Array(buffer, 37, 7),
-        new $window.Uint8Array(buffer, 44, 0)
+        new $window.Uint8Array(buffer, 17, 0),
+        new $window.Uint8Array(buffer, 17, 1),
+        new $window.Uint8Array(buffer, 18, 2),
+        new $window.Uint8Array(buffer, 20, 0),
+        new $window.Uint8Array(buffer, 20, 3),
+        new $window.Uint8Array(buffer, 23, 4),
+        new $window.Uint8Array(buffer, 27, 0),
+        new $window.Uint8Array(buffer, 27, 5),
+        new $window.Uint8Array(buffer, 32, 6),
+        new $window.Uint8Array(buffer, 38, 0),
+        new $window.Uint8Array(buffer, 38, 0),
+        new $window.Uint8Array(buffer, 38, 0),
+        new $window.Uint8Array(buffer, 38, 0),
+        new $window.Uint8Array(buffer, 38, 0),
+        new $window.Uint8Array(buffer, 38, 7),
+        new $window.Uint8Array(buffer, 45, 0)
       ];
-      expect(AngularJpeg._huffmanTableFromSegment(buffer, segment)).toEqual(table);
+      var results = {
+        type: 'AC',
+        number: numberBit,
+        table: table
+      };
+      expect(AngularJpeg._huffmanTableFromSegment(buffer, segment)).toEqual(results);
     });
   });
 });

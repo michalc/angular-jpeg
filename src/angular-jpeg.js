@@ -239,8 +239,15 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   };
 
   self._huffmanTableFromSegment = function(buffer, huffmanTableSegment) {
+    /*jshint bitwise: false*/
     var NUMBER_OF_LENGTHS = 16;
     var offset = huffmanTableSegment.segmentOffset;
+
+    var informationByte = (new $window.Uint8Array(buffer, offset, 1))[0];
+    var type = (informationByte >> 4) ? 'AC' : 'DC';
+    var number = informationByte & ~16;
+    offset += 1;
+
     var lengths = new $window.Uint8Array(buffer, offset, NUMBER_OF_LENGTHS);
     var table = [];
     offset += NUMBER_OF_LENGTHS;
@@ -248,6 +255,11 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       table.push(new $window.Uint8Array(buffer, offset, lengths[i]));
       offset += lengths[i];
     }
-    return table;
+
+    return {
+      type: type,
+      number: number,
+      table: table
+    };
   };
 });
