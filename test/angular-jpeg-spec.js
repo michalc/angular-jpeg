@@ -389,4 +389,51 @@ describe('AngularJpeg', function () {
       expect(AngularJpeg._huffmanTreeFromTable(table)).toEqual(tree);
     });
   });
+
+  describe('_huffmanTableFromSegment', function() {
+    it('should return a table', function() {
+      var segmentContents = [
+        0, 1, 2, 0, 3, 4, 0, 5, 6, 0, 0, 0, 0, 0, 7, 0,
+                                    // Length 1
+        1,                          // Length 2
+        2, 3,                       // Length 3
+                                    // Length 4
+        4, 5, 6,                    // Length 5
+        7, 8, 9, 10,                // Length 6
+                                    // Length 7
+        11, 12, 13, 14, 15,         // Length 8
+        16, 17, 18, 19, 20, 21,     // Length 9
+                                    // Length 10
+                                    // Length 11
+                                    // Length 12
+                                    // Length 13
+                                    // Length 14
+        22, 23, 24, 25, 26, 27, 28, // Length 15
+                                    // Length 16
+      ];
+      var buffer = toBuffer(segmentContents);
+      var segment = {
+        segmentOffset: 0
+      };
+      var table = [
+        new $window.Uint8Array(buffer, 16, 0),
+        new $window.Uint8Array(buffer, 16, 1),
+        new $window.Uint8Array(buffer, 17, 2),
+        new $window.Uint8Array(buffer, 19, 0),
+        new $window.Uint8Array(buffer, 19, 3),
+        new $window.Uint8Array(buffer, 22, 4),
+        new $window.Uint8Array(buffer, 26, 0),
+        new $window.Uint8Array(buffer, 26, 5),
+        new $window.Uint8Array(buffer, 31, 6),
+        new $window.Uint8Array(buffer, 37, 0),
+        new $window.Uint8Array(buffer, 37, 0),
+        new $window.Uint8Array(buffer, 37, 0),
+        new $window.Uint8Array(buffer, 37, 0),
+        new $window.Uint8Array(buffer, 37, 0),
+        new $window.Uint8Array(buffer, 37, 7),
+        new $window.Uint8Array(buffer, 44, 0)
+      ];
+      expect(AngularJpeg._huffmanTableFromSegment(buffer, segment)).toEqual(table);
+    });
+  });
 });

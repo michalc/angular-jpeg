@@ -237,4 +237,17 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
     return convertNode(root);
   };
+
+  self._huffmanTableFromSegment = function(buffer, huffmanTableSegment) {
+    var NUMBER_OF_LENGTHS = 16;
+    var offset = huffmanTableSegment.segmentOffset;
+    var lengths = new $window.Uint8Array(buffer, offset, NUMBER_OF_LENGTHS);
+    var table = [];
+    offset += NUMBER_OF_LENGTHS;
+    for (var i = 0; i < lengths.length; i++) {
+      table.push(new $window.Uint8Array(buffer, offset, lengths[i]));
+      offset += lengths[i];
+    }
+    return table;
+  };
 });
