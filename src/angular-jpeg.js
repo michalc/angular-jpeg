@@ -201,11 +201,12 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     var node = root;
     var bit;
 
-    table.forEach(function(values, codeLength) {
+    table.forEach(function(values, codeLengthMinus1) {
       values.forEach(function(value) {
-        // Search for node of codeLength - 1
         node = searchBelow;
-        while (node.codeLength < codeLength - 1) {
+
+        // Find parent node of codeLength
+        while (node.codeLength < codeLengthMinus1) {
           if (angular.isObject(node.children[0]) && !node.children[0].full) {
             node = node.children[0];
           } else if (angular.isObject(node.children[1]) && !node.children[1].full) {

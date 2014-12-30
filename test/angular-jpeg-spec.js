@@ -312,7 +312,6 @@ describe('AngularJpeg', function () {
     it('should decode a small table starting with codes of length 2', function() {
       var table = [
         [],
-        [],
         [2, 3]
       ];
       var tree = {
@@ -326,7 +325,6 @@ describe('AngularJpeg', function () {
 
     it('should decode a small table starting with codes of length 1', function() {
       var table = [
-        [],
         [1],
         [2, 3]
       ];
@@ -342,7 +340,6 @@ describe('AngularJpeg', function () {
 
     it('should decode a complex tree', function() {
       var table = [
-        [],
         [],
         [2, 3],
         [],
