@@ -59,7 +59,7 @@ angular.module('angular-jpeg').constant('ANGULAR_JPEG_SEGMENT_TYPES', {
     unsupported: true
   },
   defineHuffmanTables: {
-    marker: 0xC4,
+    marker: 0xC4
   },
   defineArithmeticCodingConditions: {
     marker: 0xCC,

@@ -5,6 +5,7 @@
   "disallowNewlineBeforeBlockStatements": true,
   "validateIndentation": 2,
   "disallowTrailingWhitespace": true,
+  "disallowTrailingComma": true,
   "requireSpaceBeforeBlockStatements": true,
   "requireCapitalizedConstructors": true,
   "validateQuoteMarks": {

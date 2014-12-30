@@ -408,7 +408,7 @@ describe('AngularJpeg', function () {
                                     // Length 12
                                     // Length 13
                                     // Length 14
-        22, 23, 24, 25, 26, 27, 28, // Length 15
+        22, 23, 24, 25, 26, 27, 28  // Length 15
                                     // Length 16
       ];
       var buffer = toBuffer(segmentContents);
