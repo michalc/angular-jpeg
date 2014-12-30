@@ -87,7 +87,8 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
           segmentContents: new $window.Uint8Array(0),
           dataOffset: dataOffset,
           dataSize: 0,
-          dataContents: new $window.Uint8Array(0)
+          dataContents: new $window.Uint8Array(0),
+          buffer: new $window.ArrayBuffer()
         });
         offset = dataOffset;
       } else {
@@ -114,12 +115,15 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
   function attachContents(buffer, segments) {
     segments.forEach(function(segment) {
+      // Suspect both contents and buffer are not needed,
+      // consider removing
       if (segment.segmentSize) {
         segment.segmentContents = new $window.Uint8Array(buffer, segment.segmentOffset, segment.segmentSize);
       }
       if (segment.dataSize) {
         segment.dataContents = new $window.Uint8Array(buffer, segment.dataOffset, segment.dataSize);
       }
+      segment.buffer = buffer;
     });
     return segments;
   }
@@ -201,8 +205,10 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     var node = root;
     var bit;
 
+    var i, value;
     table.forEach(function(values, codeLengthMinus1) {
-      values.forEach(function(value) {
+      for (i = 0; i < values.length; i++) {
+        value = values[i];
         node = searchBelow;
 
         // Find parent node of codeLength
@@ -232,27 +238,27 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
           }
           searchBelow = node.parent;
         }
-      });
+      }
     });
 
     return convertNode(root);
   };
 
-  self._huffmanTableFromSegment = function(buffer, huffmanTableSegment) {
+  self._huffmanTableFromSegment = function(segment) {
     /*jshint bitwise: false*/
     var NUMBER_OF_LENGTHS = 16;
-    var offset = huffmanTableSegment.segmentOffset;
+    var offset = segment.segmentOffset;
 
-    var informationByte = (new $window.Uint8Array(buffer, offset, 1))[0];
+    var informationByte = (new $window.Uint8Array(segment.buffer, offset, 1))[0];
     var type = (informationByte >> 4) ? 'AC' : 'DC';
     var number = informationByte & ~16;
     offset += 1;
 
-    var lengths = new $window.Uint8Array(buffer, offset, NUMBER_OF_LENGTHS);
+    var lengths = new $window.Uint8Array(segment.buffer, offset, NUMBER_OF_LENGTHS);
     var table = [];
     offset += NUMBER_OF_LENGTHS;
     for (var i = 0; i < lengths.length; i++) {
-      table.push(new $window.Uint8Array(buffer, offset, lengths[i]));
+      table.push(new $window.Uint8Array(segment.buffer, offset, lengths[i]));
       offset += lengths[i];
     }
 
@@ -261,5 +267,15 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       number: number,
       table: table
     };
+  };
+
+  self._huffmanTreesFromSegments = function(segments) {
+    var trees = {};
+    segments.defineHuffmanTables.forEach(function(segment) {
+      var table = self._huffmanTableFromSegment(segment);
+      trees[table.type] = trees[table.type] || {};
+      trees[table.type][table.number] = self._huffmanTreeFromTable(table.table);
+    });
+    return trees;
   };
 });

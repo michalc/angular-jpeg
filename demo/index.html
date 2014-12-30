@@ -22,6 +22,7 @@
   <p class="droppable" drop-file>Drop a JPEG onto this element</p>
   <p ng-if="state == 'loading'">Loading...</p>
   <p ng-if="state == 'error'">Error: {{error || 'Unknown'}}</p>
+  <pre ng-if="state == 'loaded'">{{trees | json}}</pre>
   <pre ng-if="state == 'loaded'">{{segments | json}}</pre>
   </form>
 </body>

@@ -109,7 +109,8 @@ describe('AngularJpeg', function () {
 
     it('should load data with start and end markers', function() {
       var results;
-      AngularJpeg.loadSegmentsFromBuffer(toBuffer(FIXTURES.withStartAndEndMarker)).then(function(_results_) {
+      var buffer = toBuffer(FIXTURES.withStartAndEndMarker);
+      AngularJpeg.loadSegmentsFromBuffer(buffer).then(function(_results_) {
         results = _results_;
       });
       $rootScope.$digest();
@@ -121,7 +122,8 @@ describe('AngularJpeg', function () {
           segmentContents: new $window.Uint8Array(),
           dataOffset: 2,
           dataSize: 0,
-          dataContents: new $window.Uint8Array()
+          dataContents: new $window.Uint8Array(),
+          buffer: buffer
         }],
         endOfImage: [{
           type: TYPES.endOfImage,
@@ -130,7 +132,8 @@ describe('AngularJpeg', function () {
           segmentContents: new $window.Uint8Array(),
           dataOffset: 4,
           dataSize: 0,
-          dataContents: new $window.Uint8Array()
+          dataContents: new $window.Uint8Array(),
+          buffer: buffer
         }]
       });
     });
@@ -150,7 +153,8 @@ describe('AngularJpeg', function () {
           segmentContents: new $window.Uint8Array(),
           dataOffset: 2,
           dataSize: 0,
-          dataContents: new $window.Uint8Array()
+          dataContents: new $window.Uint8Array(),
+          buffer: buffer
         }],
         comment: [{
           type: TYPES.comment,
@@ -159,7 +163,8 @@ describe('AngularJpeg', function () {
           segmentContents: new $window.Uint8Array(buffer, 6, 1),
           dataOffset: 7,
           dataSize: 0,
-          dataContents: new $window.Uint8Array()
+          dataContents: new $window.Uint8Array(),
+          buffer: buffer
         }],
         endOfImage: [{
           type: TYPES.endOfImage,
@@ -168,7 +173,8 @@ describe('AngularJpeg', function () {
           segmentContents: new $window.Uint8Array(),
           dataOffset: 9,
           dataSize: 0,
-          dataContents: new $window.Uint8Array()
+          dataContents: new $window.Uint8Array(),
+          buffer: buffer
         }]
       });
     });
@@ -188,7 +194,8 @@ describe('AngularJpeg', function () {
           segmentContents: new $window.Uint8Array(),
           dataOffset: 2,
           dataSize: 0,
-          dataContents: new $window.Uint8Array()
+          dataContents: new $window.Uint8Array(),
+          buffer: buffer
         }],
         startOfScan: [{
           type: TYPES.startOfScan,
@@ -197,7 +204,8 @@ describe('AngularJpeg', function () {
           segmentContents: new $window.Uint8Array(),
           dataOffset: 6,
           dataSize: 1,
-          dataContents: new $window.Uint8Array(buffer, 6, 1)
+          dataContents: new $window.Uint8Array(buffer, 6, 1),
+          buffer: buffer
         }],
         endOfImage: [{
           type: TYPES.endOfImage,
@@ -206,7 +214,8 @@ describe('AngularJpeg', function () {
           segmentContents: new $window.Uint8Array(),
           dataOffset: 9,
           dataSize: 0,
-          dataContents: new $window.Uint8Array()
+          dataContents: new $window.Uint8Array(),
+          buffer: buffer
         }]
       });
     });
@@ -418,7 +427,8 @@ describe('AngularJpeg', function () {
       ];
       var buffer = toBuffer(segmentContents);
       var segment = {
-        segmentOffset: 0
+        segmentOffset: 0,
+        buffer: buffer
       };
       var table = [
         new $window.Uint8Array(buffer, 17, 0),
@@ -443,7 +453,7 @@ describe('AngularJpeg', function () {
         number: numberBit,
         table: table
       };
-      expect(AngularJpeg._huffmanTableFromSegment(buffer, segment)).toEqual(results);
+      expect(AngularJpeg._huffmanTableFromSegment(segment)).toEqual(results);
     });
   });
 });
