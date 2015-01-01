@@ -13,6 +13,7 @@
       AngularJpeg.loadSegmentsFromFile(files[0]).then(function(segments) {
         $scope.segments = segments;
         $scope.trees = AngularJpeg._huffmanTreesFromSegments(segments);
+        $scope.startOfScan = AngularJpeg._decodeStartOfScanSegmentContents(segments);
         $scope.state = 'loaded';
       }, function(error) {
         $scope.state = 'error';

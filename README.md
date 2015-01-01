@@ -2,3 +2,13 @@ angular-jpeg [![Build Status](https://travis-ci.org/michalc/angular-jpeg.svg?bra
 ============
 
 AngularJS service to read JPEG files locally using pure Javascript
+
+Thanks to
+
+Christoph Loeffler, Adriaan Lieenberg, and George S. Moschytz
+Practical Fast 1-D DCT Algorithms with 11 Multiplications
+Acoustics, Speech, and Signal Processing, 1989. ICASSP-89., 1989 International Conference on, 988-991.
+
+CRYX's note about the JPEG decoding algorithm.
+Cristi Cuturicu
+http://www.opennet.ru/docs/formats/jpeg.txt

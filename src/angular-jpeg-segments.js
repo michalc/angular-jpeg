@@ -188,3 +188,12 @@ angular.module('angular-jpeg').constant('ANGULAR_JPEG_SEGMENT_TYPES', {
     empty: true
   }
 });
+
+angular.module('angular-jpeg').constant('ANGULAR_JPEG_COMPONENT_IDS', {
+  luminance: 1,
+  chrominanceBlue: 2,
+  chrominanceRed: 3,
+  // Not sure what these are
+  I: 4,
+  Q: 5
+});

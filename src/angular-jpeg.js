@@ -16,12 +16,14 @@ angular.module('angular-jpeg').constant('ANGULAR_JPEG_ERRORS', {
 angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   ANGULAR_JPEG_SEGMENT_TYPES,
   ANGULAR_JPEG_SEGMENT_PREFIX,
+  ANGULAR_JPEG_COMPONENT_IDS,
   ANGULAR_JPEG_ERRORS) {
   'use strict';
 
   var ERRORS = ANGULAR_JPEG_ERRORS;
   var TYPES = ANGULAR_JPEG_SEGMENT_TYPES;
   var PREFIX = ANGULAR_JPEG_SEGMENT_PREFIX;
+  var COMPONENT_IDS = ANGULAR_JPEG_COMPONENT_IDS;
   var self = this;
 
   function readUInt16BigEndian(uInt8Array, offset) {
@@ -36,6 +38,15 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       TYPES[name].name = name;
     }
   }
+
+  var COMPONENT_NAMES = {};
+  (function() {
+    for (var name in COMPONENT_IDS) {
+      if (COMPONENT_IDS.hasOwnProperty(name)) {
+        COMPONENT_NAMES[COMPONENT_IDS[name]] = name;
+      }
+    }
+  })();
 
   function typeFromMarker(marker) {
     var type, key;
@@ -278,4 +289,52 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     });
     return trees;
   };
+
+  // Practical Fast 1-D DCT Algorithms with 11 Multiplications
+  // Christoph Loeffler, Adriaan Lieenberg, and George S. Moschytz
+  // Acoustics, Speech, and Signal Processing, 1989. ICASSP-89., 1989 International Conference on
+  self._inverseDiscreteCosineTransform = function() {
+
+  };
+
+
+  self._decodeStartOfScanSegmentContents = function(segments) {
+    /*jshint bitwise: false*/
+    var offset = 0;
+    var segment = segments.startOfScan[0];
+    var contents = new $window.Uint8Array(segment.buffer, segment.segmentOffset, segment.segmentSize);
+    var numberOfComponents = contents[offset];
+    offset++;
+    if (numberOfComponents > 4) {
+      throw 'Too many scan components: ' + numberOfComponents;
+    }
+    if (numberOfComponents < 1) {
+      throw 'Not enough scan components: ' + numberOfComponents;
+    }
+    var components = {};
+    var componentId, huffmanTableByte, acNibble, dcNibble, huffmanTableNumber;
+    for (var i = 0; i < numberOfComponents; i++) {
+      componentId = contents[offset];
+      offset++;
+      // Byte connecting to huffman table seems unecessarily
+      // inconsistent with one in define huffman table segment
+      huffmanTableByte = contents[offset];
+      offset++;
+      acNibble = huffmanTableByte << 4 >> 4;
+      dcNibble = huffmanTableByte >> 4;
+      huffmanTableNumber = acNibble | dcNibble;
+      components[COMPONENT_NAMES[componentId]] = {
+        componentName: COMPONENT_NAMES[componentId],
+        huffmanTableType: acNibble ? 'AC' : 'DC',
+        huffmanTableNumber: huffmanTableNumber
+      };
+    }
+    return components;
+  };
+
+  // The magic happens here
+  self._decodeStartOfScanDataContents = function() {
+
+  };
+
 });
