@@ -15,6 +15,7 @@
         $scope.trees = AngularJpeg._huffmanTreesFromSegments(segments);
         $scope.startOfScan = AngularJpeg._decodeStartOfScanSegmentContents(segments);
         $scope.startOfFrame = AngularJpeg._decodeStartOfFrameBaselineDCT(segments);
+        $scope.quantizationTables = AngularJpeg._decodeQuantizationTableSegments(segments);
         $scope.state = 'loaded';
       }, function(error) {
         $scope.state = 'error';

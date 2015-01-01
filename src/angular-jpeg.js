@@ -26,6 +26,8 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   var COMPONENT_IDS = ANGULAR_JPEG_COMPONENT_IDS;
   var self = this;
 
+  var FIRST_NIBBLE = 1 + 2 + 4 + 8;
+
   function readUInt16BigEndian(uInt8Array, offset) {
     /*jshint bitwise: false*/
     return (uInt8Array[offset] << 8) | uInt8Array[offset + 1];
@@ -262,7 +264,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
     var informationByte = (new $window.Uint8Array(segment.buffer, offset, 1))[0];
     var type = (informationByte >> 4) ? 'AC' : 'DC';
-    var number = informationByte & ~16;
+    var number = informationByte & FIRST_NIBBLE;
     offset += 1;
 
     var lengths = new $window.Uint8Array(segment.buffer, offset, NUMBER_OF_LENGTHS);
@@ -299,10 +301,10 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
 
   self._decodeStartOfFrameBaselineDCT = function(segments) {
+    /*jshint bitwise: false*/
     var segment = segments.startOfFrameBaselineDCT[0];
     var contents = new $window.Uint8Array(segment.buffer, segment.segmentOffset, segment.segmentSize);
     var offset = 0;
-    var precision = contents[0];
     offset += 1;
     var height = readUInt16BigEndian(contents, offset);
     offset += 2;
@@ -317,17 +319,21 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       throw 'Not enough frame components: ' + numberOfComponents;
     }
     var components = {};
-    var componentId, samplingFactors, quantizationTableNumber;
+    var componentId, samplingFactorByte, samplingFactorVertical, samplingFactorHorizontal, quantizationTableNumber;
     for (var i = 0; i < numberOfComponents; i++) {
       componentId = contents[offset];
       offset += 1;
-      samplingFactors = contents[offset];
+      samplingFactorByte = contents[offset];
+
+      samplingFactorVertical = samplingFactorByte & FIRST_NIBBLE;
+      samplingFactorHorizontal = samplingFactorByte >> 4;
       offset += 1;
       quantizationTableNumber = contents[offset];
       offset += 1;
       components[COMPONENT_NAMES[componentId]] = {
         componentName: COMPONENT_NAMES[componentId],
-        samplingFactors: samplingFactors,
+        samplingFactorVertical: samplingFactorVertical,
+        samplingFactorHorizontal: samplingFactorHorizontal,
         quantizationTableNumber: quantizationTableNumber
       };
     }
@@ -335,8 +341,40 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       width: width,
       height: height,
       components: components
-    }
-  }
+    };
+  };
+
+  self._decodeQuantizationTableSegments = function(segments) {
+    /*jshint bitwise: false*/
+    var contents, offset, precision, quantizationTableNumber, informationByte;
+    var quantizationTables = {};
+
+    segments.defineQuantizationTables.forEach(function(segment) {
+      offset = 0;
+      contents = new $window.Uint8Array(segment.buffer, segment.segmentOffset, segment.segmentSize);
+      // Each segment can contain more than one table
+      while (offset < segment.segmentSize) {
+        informationByte = contents[offset];
+        offset += 1;
+        quantizationTableNumber = informationByte & FIRST_NIBBLE;
+        precision = informationByte >> 4 ? 2 : 1;
+
+        // Multi-byte values are stored in big endian layout
+        // so have to manually convert each value to local endian-ness
+        var table = new $window.Uint16Array(64 * precision);
+        for (var i = 0; i < 64; i++) {
+          table[i] = readUInt16BigEndian(contents, offset);
+          offset += precision;
+        }
+        quantizationTables[quantizationTableNumber] = {
+          quantizationTableNumber: quantizationTableNumber,
+          precision: precision,
+          contents: table
+        };
+      }
+    });
+    return quantizationTables;
+  };
 
   self._decodeStartOfScanSegmentContents = function(segments) {
     /*jshint bitwise: false*/
@@ -352,7 +390,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       throw 'Not enough scan components: ' + numberOfComponents;
     }
     var components = {};
-    var componentId, huffmanTableByte, acNibble, dcNibble, huffmanTableNumber;
+    var componentId, huffmanTableByte, acNibble, dcNibble;
     for (var i = 0; i < numberOfComponents; i++) {
       componentId = contents[offset];
       offset++;
@@ -360,13 +398,12 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
       // inconsistent with one in define huffman table segment
       huffmanTableByte = contents[offset];
       offset++;
-      acNibble = huffmanTableByte << 4 >> 4;
+      acNibble = huffmanTableByte & FIRST_NIBBLE;
       dcNibble = huffmanTableByte >> 4;
-      huffmanTableNumber = acNibble | dcNibble;
       components[COMPONENT_NAMES[componentId]] = {
         componentName: COMPONENT_NAMES[componentId],
-        huffmanTableType: acNibble ? 'AC' : 'DC',
-        huffmanTableNumber: huffmanTableNumber
+        huffmanTableACNumber: acNibble,
+        huffmanTableDCNumber: dcNibble
       };
     }
     return components;
