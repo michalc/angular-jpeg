@@ -12,10 +12,10 @@
 
       AngularJpeg.loadSegmentsFromFile(files[0]).then(function(segments) {
         $scope.segments = segments;
-        $scope.trees = AngularJpeg._huffmanTreesFromSegments(segments);
-        $scope.startOfScan = AngularJpeg._decodeStartOfScanSegmentContents(segments);
-        $scope.startOfFrame = AngularJpeg._decodeStartOfFrameBaselineDCT(segments);
-        $scope.quantizationTables = AngularJpeg._decodeQuantizationTableSegments(segments);
+        $scope.trees = AngularJpeg._huffmanTreesFromSegments(segments.defineHuffmanTables);
+        $scope.quantizationTables = AngularJpeg._decodeQuantizationTableSegments(segments.defineQuantizationTables);
+        $scope.startOfScan = AngularJpeg._decodeStartOfScanSegmentContents(segments.startOfScan);
+        $scope.startOfFrameBaselineDCT = AngularJpeg._decodeStartOfFrameBaselineDCT(segments.startOfFrameBaselineDCT);
         $scope.state = 'loaded';
       }, function(error) {
         $scope.state = 'error';

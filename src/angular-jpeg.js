@@ -284,7 +284,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
 
   self._huffmanTreesFromSegments = function(segments) {
     var trees = {};
-    segments.defineHuffmanTables.forEach(function(segment) {
+    segments.forEach(function(segment) {
       var table = self._huffmanTableFromSegment(segment);
       trees[table.type] = trees[table.type] || {};
       trees[table.type][table.number] = self._huffmanTreeFromTable(table.table);
@@ -300,9 +300,8 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   };
 
 
-  self._decodeStartOfFrameBaselineDCT = function(segments) {
+  self._decodeStartOfFrameBaselineDCT = function(segment) {
     /*jshint bitwise: false*/
-    var segment = segments.startOfFrameBaselineDCT[0];
     var contents = new $window.Uint8Array(segment.buffer, segment.segmentOffset, segment.segmentSize);
     var offset = 0;
     offset += 1;
@@ -349,7 +348,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     var contents, offset, precision, quantizationTableNumber, informationByte;
     var quantizationTables = {};
 
-    segments.defineQuantizationTables.forEach(function(segment) {
+    segments.forEach(function(segment) {
       offset = 0;
       contents = new $window.Uint8Array(segment.buffer, segment.segmentOffset, segment.segmentSize);
       // Each segment can contain more than one table
@@ -376,10 +375,9 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
     return quantizationTables;
   };
 
-  self._decodeStartOfScanSegmentContents = function(segments) {
+  self._decodeStartOfScanSegmentContents = function(segment) {
     /*jshint bitwise: false*/
     var offset = 0;
-    var segment = segments.startOfScan[0];
     var contents = new $window.Uint8Array(segment.buffer, segment.segmentOffset, segment.segmentSize);
     var numberOfComponents = contents[offset];
     offset++;
