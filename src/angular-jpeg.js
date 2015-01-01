@@ -298,6 +298,46 @@ angular.module('angular-jpeg').service('AngularJpeg', function($q, $window,
   };
 
 
+  self._decodeStartOfFrameBaselineDCT = function(segments) {
+    var segment = segments.startOfFrameBaselineDCT[0];
+    var contents = new $window.Uint8Array(segment.buffer, segment.segmentOffset, segment.segmentSize);
+    var offset = 0;
+    var precision = contents[0];
+    offset += 1;
+    var height = readUInt16BigEndian(contents, offset);
+    offset += 2;
+    var width = readUInt16BigEndian(contents, offset);
+    offset += 2;
+    var numberOfComponents = contents[offset];
+    offset += 1;
+    if (numberOfComponents > 4) {
+      throw 'Too many frame components: ' + numberOfComponents;
+    }
+    if (numberOfComponents < 1) {
+      throw 'Not enough frame components: ' + numberOfComponents;
+    }
+    var components = {};
+    var componentId, samplingFactors, quantizationTableNumber;
+    for (var i = 0; i < numberOfComponents; i++) {
+      componentId = contents[offset];
+      offset += 1;
+      samplingFactors = contents[offset];
+      offset += 1;
+      quantizationTableNumber = contents[offset];
+      offset += 1;
+      components[COMPONENT_NAMES[componentId]] = {
+        componentName: COMPONENT_NAMES[componentId],
+        samplingFactors: samplingFactors,
+        quantizationTableNumber: quantizationTableNumber
+      };
+    }
+    return {
+      width: width,
+      height: height,
+      components: components
+    }
+  }
+
   self._decodeStartOfScanSegmentContents = function(segments) {
     /*jshint bitwise: false*/
     var offset = 0;
