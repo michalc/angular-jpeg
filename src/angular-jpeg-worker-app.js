@@ -157,7 +157,9 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     }).then(function(segments) {
       return attachContents(buffer, segments);
     }).then(function(segments) {
-      return groupSegmentsByType(segments);
+      return {
+        data: groupSegmentsByType(segments)
+      };
     });
   };
 
@@ -173,11 +175,8 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
 
     reader.onload = function(e) {
       var buffer = e.target.result;
-      self.loadSegmentsFromBuffer(buffer).then(function(segments) {
-        deferred.resolve({
-          data: segments,
-          transferable: [buffer]
-        });
+      self.loadSegmentsFromBuffer(buffer).then(function(results) {
+        deferred.resolve(results);
       }, function(error) {
         deferred.reject(error);
       });
