@@ -17,7 +17,7 @@ module.exports = function(config) {
       'src/angular-jpeg-worker-app.js',
       'src/angular-jpeg-worker-segments.js',
       'src/angular-jpeg.js',
-      //'src/angular-jpeg-worker.js',
+      'src/angular-jpeg-worker.js',
       'test/*.js'
     ],
 
