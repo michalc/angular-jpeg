@@ -1,8 +1,8 @@
 /*global angular*/
 
-angular.module('angular-jpeg').constant('ANGULAR_JPEG_SEGMENT_PREFIX', 0xFF);
+angular.module('angular-jpeg-worker').constant('ANGULAR_JPEG_SEGMENT_PREFIX', 0xFF);
 
-angular.module('angular-jpeg').constant('ANGULAR_JPEG_SEGMENT_TYPES', {
+angular.module('angular-jpeg-worker').constant('ANGULAR_JPEG_SEGMENT_TYPES', {
   startOfFrameBaselineDCT: {
     marker: 0xC0
   },
@@ -189,7 +189,7 @@ angular.module('angular-jpeg').constant('ANGULAR_JPEG_SEGMENT_TYPES', {
   }
 });
 
-angular.module('angular-jpeg').constant('ANGULAR_JPEG_COMPONENT_IDS', {
+angular.module('angular-jpeg-worker').constant('ANGULAR_JPEG_COMPONENT_IDS', {
   luminance: 1,
   chrominanceBlue: 2,
   chrominanceRed: 3,

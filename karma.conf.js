@@ -14,8 +14,10 @@ module.exports = function(config) {
     files: [
       'bower_components/angular/angular.js',
       'bower_components/angular-mocks/angular-mocks.js',
+      'src/angular-jpeg-worker-app.js',
+      'src/angular-jpeg-worker-segments.js',
       'src/angular-jpeg.js',
-      'src/angular-jpeg-segments.js',
+      //'src/angular-jpeg-worker.js',
       'test/*.js'
     ],
 

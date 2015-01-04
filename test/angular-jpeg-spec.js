@@ -19,7 +19,7 @@ describe('AngularJpeg', function () {
     return buffer;
   }
 
-  beforeEach(module('angular-jpeg'));
+  beforeEach(module('angular-jpeg-worker'));
 
   beforeEach(inject(function(_$window_, _$rootScope_, _$q_, _AngularJpeg_,
     _ANGULAR_JPEG_SEGMENT_TYPES_,
