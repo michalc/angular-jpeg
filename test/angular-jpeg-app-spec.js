@@ -509,7 +509,7 @@ describe('AngularJpeg', function () {
     var results, deferred, args, id;
     beforeEach(function() {
       deferred = $q.defer();
-      AngularJpeg['dummyCommand'] = jasmine.createSpy().and.callFake(function() {
+      AngularJpeg.dummyCommand = jasmine.createSpy().and.callFake(function() {
         return deferred.promise;
       });
       spyOn($window, 'postMessage');
