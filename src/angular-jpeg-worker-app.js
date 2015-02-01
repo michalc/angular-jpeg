@@ -359,6 +359,39 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     throw 'Unable to find decoded value';
   };
 
+  self._fetchNBits = function(streamWithOffset, n) {
+    /*jshint bitwise: false*/
+
+    var bitOffset = streamWithOffset.bitOffset % 8;
+    var byteOffset = (streamWithOffset.bitOffset - bitOffset) >>> 3; // Division by 8
+    var stream = streamWithOffset.stream;
+    var bit, remainingNumberOfBitsInByte, byte, onesAfterBitOffset;
+    var length = 0;
+    var value = 0;
+
+    for (; byteOffset < stream.length; byteOffset++) {
+      byte = stream[byteOffset];
+
+      for (; bitOffset < 8; bitOffset++) {
+        remainingNumberOfBitsInByte = 8 - bitOffset;
+        onesAfterBitOffset = ~(~0 << remainingNumberOfBitsInByte);
+        bit = (byte & onesAfterBitOffset) >>> (remainingNumberOfBitsInByte - 1);
+        value = (value << 1) + bit;
+        length++;
+        if (length === n) {
+          return {
+            value: value,
+            stream: stream,
+            bitOffset: streamWithOffset.bitOffset + n
+          };
+        }
+      }
+      bitOffset = 0;
+    }
+
+    throw 'Unable to find n bits';
+  };
+
   // Practical Fast 1-D DCT Algorithms with 11 Multiplications
   // Christoph Loeffler, Adriaan Lieenberg, and George S. Moschytz
   // Acoustics, Speech, and Signal Processing, 1989. ICASSP-89., 1989 International Conference on

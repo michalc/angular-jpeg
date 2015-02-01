@@ -548,6 +548,25 @@ describe('AngularJpeg', function () {
     });
   });
 
+  describe('_fetchNBits', function() {
+    it('returns the correct bits', function() {
+
+      // 1101110110010101001001100
+      var stream = new $window.Uint8Array(toBuffer([221, 149, 38, 0]));
+      var start = {
+        stream: stream,
+        bitOffset: 4
+      };
+      var correctEnd = {
+        value: 108,
+        stream: stream,
+        bitOffset: 11
+      };
+      var end = AngularJpeg._fetchNBits(start, 7);
+      expect(end).toEqual(correctEnd);
+    });
+  });
+
   describe('onmessage', function() {
     var results, deferred, args, id;
     beforeEach(function() {
