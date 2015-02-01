@@ -327,6 +327,38 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     return decoded;
   };
 
+  self._decodeHuffmanValue = function(huffmanTree, streamWithOffset) {
+    /*jshint bitwise: false*/
+
+    var bitOffset = streamWithOffset.bitOffset % 8;
+    var byteOffset = (streamWithOffset.bitOffset - bitOffset) >>> 3; // Division by 8
+
+    var stream = streamWithOffset.stream;
+    var bit, remainingNumberOfBitsInByte, byte, onesAfterBitOffset;
+    var node = huffmanTree;
+
+    for (; byteOffset < stream.length; byteOffset++) {
+      byte = stream[byteOffset];
+
+      for (; bitOffset < 8; bitOffset++) {
+        remainingNumberOfBitsInByte = 8 - bitOffset;
+        onesAfterBitOffset = ~(~0 << remainingNumberOfBitsInByte);
+        bit = (byte & onesAfterBitOffset) >>> (remainingNumberOfBitsInByte - 1);
+        node = node[bit];
+        if (!angular.isObject(node)) {
+          return {
+            value: node,
+            stream: stream,
+            bitOffset: byteOffset * 8 + bitOffset + 1
+          };
+        }
+      }
+      bitOffset = 0;
+    }
+
+    throw 'Unable to find decoded value';
+  };
+
   // Practical Fast 1-D DCT Algorithms with 11 Multiplications
   // Christoph Loeffler, Adriaan Lieenberg, and George S. Moschytz
   // Acoustics, Speech, and Signal Processing, 1989. ICASSP-89., 1989 International Conference on
@@ -453,10 +485,16 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     return components;
   };
 
-  // self._decodeStartOfScanDataContents = function(startOfFrame, startOfScan) {
-  //   var width = startOfFrame.width;
-  //   var height = startOfFrame.height;
-  // };
+  self._decodeStartOfScanDataContents = function() {
+    //var width = decodedSegments.startOfFrameBaselineDCT.width;
+    //var height = decodedSegments.startOfFrameBaselineDCT.height;
+
+    //var huffmanDecoded = self._decodeHuffmanStream(startOfScanData);
+    //console.log(huffmanDecoded);
+    return {
+      data: 'something'
+    };
+  };
 });
 
 angular.module('angular-jpeg-worker').run(function($window, $q, AngularJpeg) {

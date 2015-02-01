@@ -21,11 +21,10 @@
   <p class="droppable" drop-file>Drop a JPEG onto this element</p>
   <p ng-if="state == 'loading'">Loading...</p>
   <p ng-if="state == 'error'">Error: {{error || 'Unknown'}}</p>
-  <pre ng-if="state == 'loaded'">{{quantizationTables | json}}</pre>
-  <pre ng-if="state == 'loaded'">{{startOfFrameBaselineDCT | json}}</pre>
-  <pre ng-if="state == 'loaded'">{{startOfScan | json}}</pre>
-  <pre ng-if="state == 'loaded'">{{trees | json}}</pre>
-  <pre ng-if="state == 'loaded'">{{segments | json}}</pre>
+  <pre ng-if="state == 'loaded'">{{decodedSegments.quantizationTables | json}}</pre>
+  <pre ng-if="state == 'loaded'">{{decodedSegments.startOfFrameBaselineDCT | json}}</pre>
+  <pre ng-if="state == 'loaded'">{{decodedSegments.startOfScan | json}}</pre>
+  <pre ng-if="state == 'loaded'">{{decodedSegments.trees | json}}</pre>
   </form>
 </body>
 </html>

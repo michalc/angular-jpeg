@@ -25,6 +25,7 @@ describe('AngularJpeg', function () {
     '_huffmanTreesFromSegments',
     '_decodeQuantizationTableSegments',
     '_decodeStartOfScanSegmentContents',
+    '_decodeStartOfScanDataContents',
     '_decodeStartOfFrameBaselineDCT'
   ];
 

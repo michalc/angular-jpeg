@@ -52,6 +52,7 @@ angular.module('angular-jpeg').service('AngularJpeg', function($window, Worker) 
     '_huffmanTreesFromSegments',
     '_decodeQuantizationTableSegments',
     '_decodeStartOfScanSegmentContents',
+    '_decodeStartOfScanDataContents',
     '_decodeStartOfFrameBaselineDCT'
   ];
 

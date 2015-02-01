@@ -505,6 +505,49 @@ describe('AngularJpeg', function () {
     });
   });
 
+  describe('_decodeHuffmanValue', function() {
+    it('returns', function() {
+      var tree = {
+        '0': {
+          '0': 1,
+          '1': 2
+        },
+        '1': {
+          '0': {
+            '0': 3,
+            '1': {
+              '0': 0,
+              '1': 4
+            }
+          },
+          '1': {
+            '0': {
+              '0': 17,
+              '1': {
+                '0': 5,
+                '1': 18
+              }
+            }
+          }
+        }
+      };
+      // [18, 4, 1, 0, 3, 3, 17];
+      // 11011 1011 00 1010 100 100 1100
+      var stream = new $window.Uint8Array(toBuffer([221, 149, 38, 0]));
+      var start = {
+        stream: stream,
+        bitOffset: 15
+      };
+      var correctEnd = {
+        value: 3,
+        stream: stream,
+        bitOffset: 18
+      };
+      var end = AngularJpeg._decodeHuffmanValue(tree, start);
+      expect(end).toEqual(correctEnd);
+    });
+  });
+
   describe('onmessage', function() {
     var results, deferred, args, id;
     beforeEach(function() {

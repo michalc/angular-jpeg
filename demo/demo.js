@@ -4,28 +4,26 @@
 
   var app = angular.module('angular-jpeg-demo', ['angular-jpeg']);
 
-  app.controller('DemoController', function($window, $scope, AngularJpeg) {
+  app.controller('DemoController', function($window, $q, $scope, AngularJpeg) {
     $scope.state = 'initial';
 
     $scope.$on('dropFile::dropped', function(e, files) {
       $scope.state = 'loading';
+      var startOfScanData;
 
       AngularJpeg.loadSegmentsFromFile(files[0]).then(function(segments) {
-        $scope.segments = segments;
-        AngularJpeg._huffmanTreesFromSegments(segments.defineHuffmanTables).then(function(trees) {
-          $scope.trees = trees;
+        startOfScanData = segments.startOfScan[0].dataContents;
+        return $q.all({
+          trees: AngularJpeg._huffmanTreesFromSegments(segments.defineHuffmanTables),
+          quantizationTables: AngularJpeg._decodeQuantizationTableSegments(segments.defineQuantizationTables),
+          startOfScan: AngularJpeg._decodeStartOfScanSegmentContents(segments.startOfScan[0]),
+          startOfFrameBaselineDCT: AngularJpeg._decodeStartOfFrameBaselineDCT(segments.startOfFrameBaselineDCT[0])
         });
-        AngularJpeg._decodeQuantizationTableSegments(segments.defineQuantizationTables)
-          .then(function(quantizationTables) {
-          $scope.quantizationTables = quantizationTables;
-        });
-        AngularJpeg._decodeStartOfScanSegmentContents(segments.startOfScan[0]).then(function(startOfScan) {
-          $scope.startOfScan = startOfScan;
-        });
-        AngularJpeg._decodeStartOfFrameBaselineDCT(segments.startOfFrameBaselineDCT[0])
-          .then(function(startOfFrameBaselineDCT) {
-          $scope.startOfFrameBaselineDCT = startOfFrameBaselineDCT;
-        });
+      }).then(function(decodedSegments) {
+        $scope.decodedSegments = decodedSegments;
+        return AngularJpeg._decodeStartOfScanDataContents(decodedSegments, startOfScanData);
+      }).then(function(data) {
+        $scope.data = data;
         $scope.state = 'loaded';
       }, function(error) {
         $scope.state = 'error';
