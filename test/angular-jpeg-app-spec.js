@@ -504,4 +504,69 @@ describe('AngularJpeg', function () {
 
     });
   });
+
+  describe('onmessage', function() {
+    var results, deferred, args, id;
+    beforeEach(function() {
+      deferred = $q.defer();
+      AngularJpeg['dummyCommand'] = jasmine.createSpy().and.callFake(function() {
+        return deferred.promise;
+      });
+      spyOn($window, 'postMessage');
+      args = {};
+      results = {
+        data: {}
+      };
+      id = 1;
+      $window.onmessage({
+        data: {
+          command: 'dummyCommand',
+          args: [args],
+          id: id
+        }
+      });
+    });
+
+    it('is defined', function() {
+      expect($window.onmessage).toBeDefined();
+    });
+
+    it('calls the correct command', function() {
+      expect(AngularJpeg.dummyCommand).toHaveBeenCalledWith(args);
+    });
+
+    it('doesn\'t call postMessage before the promise has been resolved', function() {
+      expect($window.postMessage).not.toHaveBeenCalled();
+    });
+
+    it('returns with type resolve on resolve', function() {
+      deferred.resolve(results);
+      $rootScope.$apply();
+      expect($window.postMessage).toHaveBeenCalledWith({
+        id: id,
+        type: 'resolve',
+        data: results.data
+      });
+    });
+
+    it('returns with type resolve on reject', function() {
+      deferred.reject(results);
+      $rootScope.$apply();
+      expect($window.postMessage).toHaveBeenCalledWith({
+        id: id,
+        type: 'reject',
+        data: results.data
+      });
+    });
+
+    it('notifies with type notify on reject', function() {
+      deferred.notify(results);
+      $rootScope.$apply();
+      expect($window.postMessage).toHaveBeenCalledWith({
+        id: id,
+        type: 'notify',
+        data: results.data
+      });
+    });
+  });
 });
