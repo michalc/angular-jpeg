@@ -300,6 +300,33 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     };
   };
 
+  self._decodeHuffmanStream = function(huffmanTree, stream) {
+    /*jshint bitwise: false*/
+
+    var readingByteIndex = 0;
+    var readingBitIndex = 0;
+    var bit, byte, allOnes;
+
+    var node = huffmanTree;
+
+    var decoded = [];
+    for (readingByteIndex = 0; readingByteIndex < stream.length; readingByteIndex++) {
+      byte = stream[readingByteIndex];
+      allOnes = 0;
+
+      for (readingBitIndex = 7; readingBitIndex >= 0; readingBitIndex--) {
+        bit = (byte & ~allOnes) >> readingBitIndex;
+        node = node[bit];
+        if (!angular.isObject(node)) {
+          decoded.push(node);
+          node = huffmanTree;
+        }
+        allOnes = allOnes | (1 << readingBitIndex);
+      }
+    }
+    return decoded;
+  };
+
   // Practical Fast 1-D DCT Algorithms with 11 Multiplications
   // Christoph Loeffler, Adriaan Lieenberg, and George S. Moschytz
   // Acoustics, Speech, and Signal Processing, 1989. ICASSP-89., 1989 International Conference on

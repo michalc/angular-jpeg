@@ -462,4 +462,46 @@ describe('AngularJpeg', function () {
       expect(AngularJpeg._huffmanTableFromSegment(segment)).toEqual(results);
     });
   });
+
+  describe('_decodeHuffmanStream', function() {
+    it('return a list of bytes', function() {
+      var tree = {
+        '0': {
+          '0': 1,
+          '1': 2
+        },
+        '1': {
+          '0': {
+            '0': 3,
+            '1': {
+              '0': 0,
+              '1': 4
+            }
+          },
+          '1': {
+            '0': {
+              '0': 17,
+              '1': {
+                '0': 5,
+                '1': 18
+              }
+            }
+          }
+        }
+      };
+      var correctResults = [18, 4, 1, 0, 3, 3, 17];
+      // 11011 1011 00 1010 100 100 1100
+      var stream = new $window.Uint8Array(toBuffer([221, 149, 38, 0]));
+      var decodedBytes = AngularJpeg._decodeHuffmanStream(tree, stream);
+
+      // The decoding algorithm may result in extra trash bytes due to remaining
+      // bits in the last byte. Suspect that in JPEG the run length encoding
+      // will stop when have 64 values, so that will be able to determine
+      // what decoded bytes are trash
+      decodedBytes.length = correctResults.length;
+
+      expect(decodedBytes).toEqual(correctResults);
+
+    });
+  });
 });
