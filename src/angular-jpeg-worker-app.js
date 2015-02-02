@@ -292,7 +292,7 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     segments.forEach(function(segment) {
       var table = self._huffmanTableFromSegment(segment);
       trees[table.type] = trees[table.type] || {};
-      trees[table.type][table.number] = self._huffmanTreeFromTable(table.table);
+      trees[table.type][table.number] = self._huffmanTreeFromTable(table.table).data;
     });
 
     return {
@@ -327,7 +327,7 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     return decoded;
   };
 
-  self._decodeHuffmanValue = function(huffmanTree, streamWithOffset) {
+  self._decodeHuffmanValue = function(streamWithOffset, huffmanTree) {
     /*jshint bitwise: false*/
 
     var bitOffset = streamWithOffset.bitOffset % 8;
@@ -345,12 +345,12 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
         onesAfterBitOffset = ~(~0 << remainingNumberOfBitsInByte);
         bit = (byte & onesAfterBitOffset) >>> (remainingNumberOfBitsInByte - 1);
         node = node[bit];
+        if (!angular.isDefined(node)) {
+          throw 'Invalid bit value of ' + bit;
+        }
         if (!angular.isObject(node)) {
-          return {
-            value: node,
-            stream: stream,
-            bitOffset: byteOffset * 8 + bitOffset + 1
-          };
+          streamWithOffset.bitOffset = byteOffset * 8 + bitOffset + 1
+          return node;
         }
       }
       bitOffset = 0;
@@ -379,11 +379,8 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
         value = (value << 1) + bit;
         length++;
         if (length === n) {
-          return {
-            value: value,
-            stream: stream,
-            bitOffset: streamWithOffset.bitOffset + n
-          };
+          streamWithOffset.bitOffset = streamWithOffset.bitOffset + n;
+          return value;
         }
       }
       bitOffset = 0;
@@ -515,15 +512,30 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
         huffmanTableDCNumber: dcNibble
       };
     }
-    return components;
+    return {
+      data: components
+    };
   };
 
-  self._decodeStartOfScanDataContents = function() {
-    //var width = decodedSegments.startOfFrameBaselineDCT.width;
-    //var height = decodedSegments.startOfFrameBaselineDCT.height;
+  self._decodeStartOfScanDataContents = function(decodedSegments, data) {
+    var streamWithOffset = {
+      stream: data,
+      bitOffset: 0
+    };
 
-    //var huffmanDecoded = self._decodeHuffmanStream(startOfScanData);
-    //console.log(huffmanDecoded);
+    var dcTrees = decodedSegments.trees.DC;
+    var acTrees = decodedSegments.trees.AC;
+
+    //var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, dcTree);
+    //console.log(streamWithOffset);
+    console.log(decodedSegments.startOfScan);
+    var luminance = decodedSegments.startOfScan.luminance;
+    var luminanceDCTree = dcTrees[luminance.huffmanTableDCNumber];
+
+    var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, luminanceDCTree);
+    var dcCoefficientDiff = self._fetchNBits(streamWithOffset, dcCoefficientCategory);
+    console.log(dcCoefficientCategory, dcCoefficientDiff);
+
     return {
       data: 'something'
     };

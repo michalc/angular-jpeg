@@ -534,17 +534,17 @@ describe('AngularJpeg', function () {
       // [18, 4, 1, 0, 3, 3, 17];
       // 11011 1011 00 1010 100 100 1100
       var stream = new $window.Uint8Array(toBuffer([221, 149, 38, 0]));
-      var start = {
+      var streamWithOffset = {
         stream: stream,
         bitOffset: 15
       };
-      var correctEnd = {
-        value: 3,
+      var streamWithOffsetEnd = {
         stream: stream,
         bitOffset: 18
       };
-      var end = AngularJpeg._decodeHuffmanValue(tree, start);
-      expect(end).toEqual(correctEnd);
+      var value = AngularJpeg._decodeHuffmanValue(streamWithOffset, tree);
+      expect(value).toEqual(3);
+      expect(streamWithOffset).toEqual(streamWithOffsetEnd);
     });
   });
 
@@ -553,17 +553,17 @@ describe('AngularJpeg', function () {
 
       // 1101110110010101001001100
       var stream = new $window.Uint8Array(toBuffer([221, 149, 38, 0]));
-      var start = {
+      var streamWithOffset = {
         stream: stream,
         bitOffset: 4
       };
-      var correctEnd = {
-        value: 108,
+      var streamWithOffsetEnd = {
         stream: stream,
         bitOffset: 11
       };
-      var end = AngularJpeg._fetchNBits(start, 7);
-      expect(end).toEqual(correctEnd);
+      var value = AngularJpeg._fetchNBits(streamWithOffset, 7);
+      expect(value).toEqual(108);
+      expect(streamWithOffset).toEqual(streamWithOffsetEnd);
     });
   });
 
