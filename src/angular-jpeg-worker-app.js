@@ -349,7 +349,7 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
           throw 'Invalid bit value of ' + bit;
         }
         if (!angular.isObject(node)) {
-          streamWithOffset.bitOffset = byteOffset * 8 + bitOffset + 1
+          streamWithOffset.bitOffset = byteOffset * 8 + bitOffset + 1;
           return node;
         }
       }
@@ -517,28 +517,25 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     };
   };
 
-  self._decodeStartOfScanDataContents = function(decodedSegments, data) {
-    var streamWithOffset = {
-      stream: data,
-      bitOffset: 0
-    };
+  self._decodeStartOfScanDataContents = function(/*decodedSegments, data*/) {
+    // var streamWithOffset = {
+    //   stream: data,
+    //   bitOffset: 0
+    // };
 
-    var dcTrees = decodedSegments.trees.DC;
-    var acTrees = decodedSegments.trees.AC;
+    // var dcTrees = decodedSegments.trees.DC;
+    // var acTrees = decodedSegments.trees.AC;
 
-    //var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, dcTree);
-    //console.log(streamWithOffset);
-    console.log(decodedSegments.startOfScan);
-    var luminance = decodedSegments.startOfScan.luminance;
-    var luminanceDCTree = dcTrees[luminance.huffmanTableDCNumber];
+    // //var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, dcTree);
+    // var luminance = decodedSegments.startOfScan.luminance;
+    // var luminanceDCTree = dcTrees[luminance.huffmanTableDCNumber];
 
-    var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, luminanceDCTree);
-    var dcCoefficientDiff = self._fetchNBits(streamWithOffset, dcCoefficientCategory);
-    console.log(dcCoefficientCategory, dcCoefficientDiff);
+    // var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, luminanceDCTree);
+    // var dcCoefficientDiff = self._fetchNBits(streamWithOffset, dcCoefficientCategory);
 
-    return {
-      data: 'something'
-    };
+    // return {
+    //   data: 'something'
+    // };
   };
 });
 
