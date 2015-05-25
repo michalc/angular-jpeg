@@ -426,11 +426,79 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     return [byte >>> 4, ~(~0 << 4) & byte];
   };
 
-  // Practical Fast 1-D DCT Algorithms with 11 Multiplications
-  // Christoph Loeffler, Adriaan Lieenberg, and George S. Moschytz
-  // Acoustics, Speech, and Signal Processing, 1989. ICASSP-89., 1989 International Conference on
-  self._inverseDiscreteCosineTransform = function() {
+  var ORDER = [
+    [0,  1, 5, 6,14,15,27,28],
+    [2,  4, 7,13,16,26,29,42],
+    [3,  8,12,17,25,30,41,43],
+    [9, 11,18,24,31,40,44,53],
+    [10,19,23,32,39,45,52,54],
+    [20,22,33,38,46,51,55,60],
+    [21,34,37,47,50,56,59,61],
+    [35,36,48,49,57,58,62,63]
+  ];
 
+  var COORDS = {};
+  ORDER.forEach(function(row, j) {
+    row.forEach(function(index, i) {
+      COORDS[index] = [i, j];
+    });
+  });
+
+  function getUintArray() {
+    return [
+      new Uint8Array(8),
+      new Uint8Array(8),
+      new Uint8Array(8),
+      new Uint8Array(8),
+      new Uint8Array(8),
+      new Uint8Array(8),
+      new Uint8Array(8),
+      new Uint8Array(8)
+    ];
+  }
+
+  self._inverseDiscreteCosineTransform = function(vector) {
+    // Can probably do something nicer than array of arrays?
+    var input = [
+      new Int8Array(8),
+      new Int8Array(8),
+      new Int8Array(8),
+      new Int8Array(8),
+      new Int8Array(8),
+      new Int8Array(8),
+      new Int8Array(8),
+      new Int8Array(8)
+    ];
+    var output = getUintArray();
+
+    vector.forEach(function(val, i) {
+      input[COORDS[i][0]][COORDS[i][1]] = val;
+    });
+
+    function c(u, v) {
+      if (u == 0 && v == 0) {
+        return 0.5;
+      } else {
+        return 1;
+      }
+    }
+
+    // Crazy slow version, iterating loads and mixing
+    // floating point arithmetic, has divisins, calling Math.cos...
+    var x, y, u, v, sum;
+    for (x = 0; x < 8; x++) {
+      for (y = 0; y < 8; y++) {
+        sum = 0;
+        for (u = 0; u < 8; u++) {
+          for (v = 0; v < 8; v++) {
+            sum += c(u,v) * input[u][v] * Math.cos((2*x+1)*u*Math.PI/16) * Math.cos((2*y+1)*v*Math.PI/16) / 4;
+          }
+        }
+        output[x][y] = sum + 128;
+      }
+    }
+
+    return output;
   };
 
 
@@ -618,7 +686,7 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
 
     // Just a list of lists for now
     // Might need something more structured to access
-    var cosineCoefficients = [];
+    var imageData = {};
     var dcDiffs;
     // Can be more efficient allocating just 1 int array per component ahead of time?
     for (var y = 0; y < numberOfVerticalIterations; y++) {
@@ -629,7 +697,6 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
               self._skipAnyRestartMarkers(streamWithOffset);
               dcDiffs[componentName] = dcDiffs[componentName] | 0;
               var cosineCoffForComponent = [];
-              cosineCoefficients.push(cosineCoffForComponent);
               var component = components[componentName];
               var dcTree = dcTrees[component.huffmanTableDCNumber];
 
@@ -672,14 +739,67 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
               if (cosineCoffForComponent.length != 64) {
                 throw 'Cosine coefficients must be of length 64';
               }
+
+              // No support for resampling if sampling factors are not zero
+              imageData[x] = imageData[x] || {};
+              imageData[x][y] = imageData[x][y] || {};
+              imageData[x][y][componentName] = self._inverseDiscreteCosineTransform(cosineCoffForComponent);
             }
           }
         });
       }
     }
 
+    // Transform to RGB
+    for (var x in imageData) {
+      var unitRow = imageData[x];
+      for (y in unitRow) {
+        var unit = unitRow[y];
+        unit.red = getUintArray();
+        unit.green = getUintArray();
+        unit.blue = getUintArray();
+
+        for (var i = 0; i < 8; i++) {
+          for (var j = 0; j < 8; j ++) {
+            unit.red[i][j]   = unit.luminance[i][j]                                                + 1.402   * (unit.chrominanceRed[i][j] - 128); 
+            unit.green[i][j] = unit.luminance[i][j] - 0.34414 * (unit.chrominanceBlue[i][j] - 128) - 0.71414 * (unit.chrominanceRed[i][j] - 128); 
+            unit.blue[i][j]  = unit.luminance[i][j] + 1.772   * (unit.chrominanceBlue[i][j] - 128);
+          }
+        }
+        delete unit.luminance;
+        delete unit.chrominanceBlue;
+        delete unit.chrominanceRed;
+      }
+    }
+
+    // Make into single imageData array
+    var bytesPerPixel = 4;
+    var allData = new Uint8ClampedArray(numberOfHorizontalIterations * numberOfVerticalIterations * 64 * bytesPerPixel);
+
+    // Not worrying about parts beyond edges for now,
+    // and as always, crazy innefficient
+    var width = numberOfHorizontalIterations * 8;
+    var height = numberOfVerticalIterations * 8;
+    for (var x in imageData) {
+      var unitRow = imageData[x];
+      var unitXCoord = parseInt(x) * 8;
+      for (y in unitRow) {
+        var unitYCoord = parseInt(y) * 8;
+        var unit = unitRow[y];
+        for (var i = 0; i < 8; i++) {
+          for (var j = 0; j < 8; j++) {
+            var start = bytesPerPixel * ((unitYCoord + i) * width + unitXCoord + j);
+            allData[start + 0] = unit.red[i][j];
+            allData[start + 1] = unit.green[i][j];
+            allData[start + 2] = unit.blue[i][j];
+            allData[start + 3] = 255;
+          }
+        }
+      }
+    }
+
     return {
-      data: cosineCoefficients
+      data: allData
     };
   };
 });

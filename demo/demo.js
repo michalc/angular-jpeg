@@ -21,9 +21,16 @@
         });
       }).then(function(decodedSegments) {
         $scope.decodedSegments = decodedSegments;
+        $scope.width = decodedSegments.startOfFrameBaselineDCT.width;
+        $scope.height = decodedSegments.startOfFrameBaselineDCT.height;
+
+        // For now round up to multiples of 8
+        $scope.width += $scope.width % 8;
+        $scope.height += $scope.height % 8;
+
         return AngularJpeg._decodeStartOfScanDataContents(decodedSegments, startOfScanData);
       }).then(function(data) {
-        $scope.data = data;
+        $scope.imageData = data;
         $scope.state = 'loaded';
       }, function(error) {
         $scope.state = 'error';
@@ -65,5 +72,26 @@
         element.on('drop', onDrop);
       }
     };
+  });
+
+  app.directive('canvas', function($timeout) {
+    return {
+      restrict: 'E',
+      link: function(scope, element, attrs) {
+        var data = scope.$eval(attrs.imageData);
+        console.log(data.length);
+        $timeout(function() {
+          element.prop('width', parseInt(attrs.width));
+          element.prop('height', parseInt(attrs.height));
+          console.log(element[0]);
+          var context = element[0].getContext('2d');
+          var imageData = context.createImageData(parseInt(attrs.width), parseInt(attrs.height));
+          imageData.data.set(data);
+          console.log(imageData.data);
+          context.putImageData(imageData, 0, 0);
+        });
+
+      }
+    }
   });
 })();
