@@ -330,6 +330,7 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
   self._decodeHuffmanValue = function(streamWithOffset, huffmanTree) {
     /*jshint bitwise: false*/
 
+    var nodes = 0;
     var bitOffset = streamWithOffset.bitOffset % 8;
     var byteOffset = (streamWithOffset.bitOffset - bitOffset) >>> 3; // Division by 8
 
@@ -337,21 +338,33 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     var bit, remainingNumberOfBitsInByte, byte, onesAfterBitOffset;
     var node = huffmanTree;
 
+    // xFF00 are special in jpeg format and the 00 must be skipped
+    // Should this be abstracted away to a zero-skipped stream function?
+    // Could it happen when fetching other bits?
+    var skipZeroes = false;
+
     for (; byteOffset < stream.length; byteOffset++) {
       byte = stream[byteOffset];
 
+      skipZeroes = (byte == ANGULAR_JPEG_SEGMENT_PREFIX && stream[byteOffset + 1] == 0);
+
       for (; bitOffset < 8; bitOffset++) {
+        nodes++;
         remainingNumberOfBitsInByte = 8 - bitOffset;
         onesAfterBitOffset = ~(~0 << remainingNumberOfBitsInByte);
         bit = (byte & onesAfterBitOffset) >>> (remainingNumberOfBitsInByte - 1);
         node = node[bit];
         if (!angular.isDefined(node)) {
-          throw 'Invalid bit value of ' + bit;
+          throw 'Invalid bit value of ' + bit + ' at ' + nodes;
         }
         if (!angular.isObject(node)) {
           streamWithOffset.bitOffset = byteOffset * 8 + bitOffset + 1;
           return node;
         }
+      }
+      if (skipZeroes) {
+        byteOffset++;
+        skipZeroes = false;
       }
       bitOffset = 0;
     }
@@ -359,8 +372,27 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
     throw 'Unable to find decoded value';
   };
 
+  // Encoded values can be negative,
+  // using a form of 1s compliement where the highest
+  // bit being 0 mean it's negative
+  self._negativise = function(value, category) {
+    var isNegative = value >>> (category - 1) === 0;
+    if (isNegative) {
+      var ones = ~(~0 << category);
+      value = ~value & ones;
+      value = -1 * value;
+    }
+    return value;
+  }
+
   self._fetchNBits = function(streamWithOffset, n) {
     /*jshint bitwise: false*/
+
+    // n is always a category, which if 0
+    // means that a zero value has been encoded
+    if (n === 0) {
+      return 0;
+    }
 
     var bitOffset = streamWithOffset.bitOffset % 8;
     var byteOffset = (streamWithOffset.bitOffset - bitOffset) >>> 3; // Division by 8
@@ -380,13 +412,18 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
         length++;
         if (length === n) {
           streamWithOffset.bitOffset = streamWithOffset.bitOffset + n;
-          return value;
+          return self._negativise(value, n);
         }
       }
       bitOffset = 0;
     }
 
     throw 'Unable to find n bits';
+  };
+
+  self._splitIntoNibbles = function(byte) {
+     /*jshint bitwise: false*/
+    return [byte >>> 4, ~(~0 << 4) & byte];
   };
 
   // Practical Fast 1-D DCT Algorithms with 11 Multiplications
@@ -496,6 +533,7 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
       throw 'Not enough scan components: ' + numberOfComponents;
     }
     var components = {};
+    var componentOrder = [];
     var componentId, huffmanTableByte, acNibble, dcNibble;
     for (var i = 0; i < numberOfComponents; i++) {
       componentId = contents[offset];
@@ -506,6 +544,10 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
       offset++;
       acNibble = huffmanTableByte & FIRST_NIBBLE;
       dcNibble = huffmanTableByte >> 4;
+      // Assuming that the order here the order of the data
+      // in the actual data. Also order of keys on objects
+      // doesn't seem to survive JSONification
+      componentOrder.push(COMPONENT_NAMES[componentId]);
       components[COMPONENT_NAMES[componentId]] = {
         componentName: COMPONENT_NAMES[componentId],
         huffmanTableACNumber: acNibble,
@@ -513,29 +555,132 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
       };
     }
     return {
-      data: components
+      data: {
+        componentOrder: componentOrder,
+        components: components
+      }
     };
   };
 
-  self._decodeStartOfScanDataContents = function(/*decodedSegments, data*/) {
-    // var streamWithOffset = {
-    //   stream: data,
-    //   bitOffset: 0
-    // };
+  self._skipAnyRestartMarkers = function(streamWithOffset) {
+    var bitOffset = streamWithOffset.bitOffset % 8;
+    var byteOffset = (streamWithOffset.bitOffset - bitOffset) >>> 3;
+    var stream = streamWithOffset.stream;
+    if (bitOffset) byteOffset++;
 
-    // var dcTrees = decodedSegments.trees.DC;
-    // var acTrees = decodedSegments.trees.AC;
+    var skipped = false;
+    if (stream[byteOffset] == ANGULAR_JPEG_SEGMENT_PREFIX) {
+    }
+    while (stream[byteOffset] == ANGULAR_JPEG_SEGMENT_PREFIX && stream[byteOffset + 1] != 0) {
+      var skipped = true;
+      byteOffset += 2;
+    };
+    if (skipped) {
+      stream.bitOffset = byteOffset * 8;
+    }
+  };
 
-    // //var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, dcTree);
-    // var luminance = decodedSegments.startOfScan.luminance;
-    // var luminanceDCTree = dcTrees[luminance.huffmanTableDCNumber];
+  self._decodeStartOfScanDataContents = function(decodedSegments, data) {
+    /*jshint bitwise: false*/
+    var streamWithOffset = {
+      stream: data,
+      bitOffset: 0
+    };
+    var END_OF_BLOCK = 0;
+    var SIXTEEN_ZEROES = 15 << 4;
 
-    // var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, luminanceDCTree);
-    // var dcCoefficientDiff = self._fetchNBits(streamWithOffset, dcCoefficientCategory);
+    var dcTrees = decodedSegments.trees.DC;
+    var acTrees = decodedSegments.trees.AC;
 
-    // return {
-    //   data: 'something'
-    // };
+    var componentOrder = decodedSegments.startOfScan.componentOrder;
+    var components = decodedSegments.startOfScan.components;
+
+    var dcDiffs = {};
+    var cosineCoefficients = {};
+    var width = decodedSegments.startOfFrameBaselineDCT.width;
+    var height =  decodedSegments.startOfFrameBaselineDCT.height;
+    var horizontalRemainder = width % 8;
+    var verticalRemainder = height % 8;
+    var numberOfHorizontalBlocks = (width - horizontalRemainder) / 8 + (horizontalRemainder ? 1 : 0);
+    var numberOfVerticalBlocks = (width - verticalRemainder) / 8 + (verticalRemainder ? 1 : 0);
+
+    // Assuming that there is a sampling factor == 1
+    // and can divide each other (e.g. can't have 1,3 and)
+    var samplingFactors = decodedSegments.startOfFrameBaselineDCT.components;
+    var maxHorizontalFactor = 1;
+    var maxVerticalFactor = 1;
+    componentOrder.forEach(function(componentName) {
+      maxHorizontalFactor = Math.max(samplingFactors[componentName].samplingFactorVertical);
+      maxVerticalFactor = Math.max(samplingFactors[componentName].samplingFactorVertical);
+    });
+    var numberOfHorizontalIterations = numberOfHorizontalBlocks / maxHorizontalFactor;
+    var numberOfVerticalIterations = numberOfVerticalBlocks / maxVerticalFactor;
+
+    // Just a list of lists for now
+    // Might need something more structured to access
+    var cosineCoefficients = [];
+    var dcDiffs;
+    // Can be more efficient allocating just 1 int array per component ahead of time?
+    for (var y = 0; y < numberOfVerticalIterations; y++) {
+      for (var x = 0; x < numberOfHorizontalIterations; x++) {
+        componentOrder.forEach(function(componentName) {
+          for (var y_s = 0; y_s < samplingFactors[componentName].samplingFactorVertical; y_s++) {
+            for (var x_s = 0; x_s < samplingFactors[componentName].samplingFactorHorizontal; x_s++) {
+              self._skipAnyRestartMarkers(streamWithOffset);
+              dcDiffs[componentName] = dcDiffs[componentName] | 0;
+              var cosineCoffForComponent = [];
+              cosineCoefficients.push(cosineCoffForComponent);
+              var component = components[componentName];
+              var dcTree = dcTrees[component.huffmanTableDCNumber];
+
+              var dcCoefficientCategory = self._decodeHuffmanValue(streamWithOffset, dcTree);
+              var dcDiff = self._fetchNBits(streamWithOffset, dcCoefficientCategory);
+              dcDiffs[componentName] += dcDiff;
+              cosineCoffForComponent.push(dcDiffs[componentName]);
+              var i = 1;
+
+              var acTree = acTrees[component.huffmanTableACNumber];
+              var upTo;
+              while (i < 64) {
+                var zeroesAndCategoryPair = self._decodeHuffmanValue(streamWithOffset, acTree);
+                var zeroesAndCategoryNibbles = self._splitIntoNibbles(zeroesAndCategoryPair);
+                var numberOfZeroes = zeroesAndCategoryNibbles[0];
+                var categoryOfCofficient = zeroesAndCategoryNibbles[1];
+                if (zeroesAndCategoryPair === END_OF_BLOCK || i + numberOfZeroes + 1 > 64) {
+                  while (i < 64) {
+                    cosineCoffForComponent.push(0);
+                    i++;
+                  }
+                  break;
+                } else if (zeroesAndCategoryPair === SIXTEEN_ZEROES) {
+                  upTo = i + 16;
+                  while (i < upTo) {
+                    cosineCoffForComponent.push(0);
+                    i++;
+                  }
+                } else {
+                  var acCoefficient = self._fetchNBits(streamWithOffset, categoryOfCofficient);
+                  upTo = i + numberOfZeroes;
+                  while (i < upTo) {
+                    cosineCoffForComponent.push(0);
+                    i++;
+                  }
+                  cosineCoffForComponent.push(acCoefficient);
+                  i++;
+                }
+              }
+              if (cosineCoffForComponent.length != 64) {
+                throw 'Cosine coefficients must be of length 64';
+              }
+            }
+          }
+        });
+      }
+    }
+
+    return {
+      data: cosineCoefficients
+    };
   };
 });
 

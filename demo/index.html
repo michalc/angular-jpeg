@@ -21,6 +21,7 @@
   <p class="droppable" drop-file>Drop a JPEG onto this element</p>
   <p ng-if="state == 'loading'">Loading...</p>
   <p ng-if="state == 'error'">Error: {{error || 'Unknown'}}</p>
+  <pre ng-if="state == 'loaded'">{{data | json}}</pre>
   <pre ng-if="state == 'loaded'">{{decodedSegments.quantizationTables | json}}</pre>
   <pre ng-if="state == 'loaded'">{{decodedSegments.startOfFrameBaselineDCT | json}}</pre>
   <pre ng-if="state == 'loaded'">{{decodedSegments.startOfScan | json}}</pre>
