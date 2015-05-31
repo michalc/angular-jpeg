@@ -440,7 +440,7 @@ angular.module('angular-jpeg-worker').service('AngularJpeg', function($q, $windo
   var COORDS = {};
   ORDER.forEach(function(row, j) {
     row.forEach(function(index, i) {
-      COORDS[index] = [i, j];
+      COORDS[index] = [j, i];
     });
   });
 
